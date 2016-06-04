@@ -1,0 +1,12 @@
+body {
+    //font-size:108%;
+    //padding-top: 50px;
+    /*使用字體*/
+    
+    font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'Helvetica Neue', Helvetica, Arial, 'Heiti TC', 微軟正黑體, sans-serif;
+    overflow-y: scroll;
+}
+.content {
+    padding: 20px 15px;
+    //text-align: center;
+}
