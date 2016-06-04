@@ -36,7 +36,6 @@ var CourtBox = React.createClass({
 	render: function(){
 		return (
 			<div className="queryBox">
-				<h1>法院庭期查詢</h1>
 				<QueryForm filterCourtNm={this.state.filterCourtNm} onFilter={this.handleFilter}/>
 				<CourtList data={this.state.data} filterCourtNm={this.state.filterCourtNm}/>
 			</div>
@@ -109,7 +108,7 @@ var CourtList = React.createClass({
 		});
 		return (
 			<div className="content">
-				<table className="table table-bordered">
+				<table className="table table-bordered table-striped">
 					<thead>
 					<tr>
 						<td>序號</td>
@@ -122,8 +121,10 @@ var CourtList = React.createClass({
 						<td>法庭</td>
 						<td>股別</td>
 						<td>庭類</td>
+					{/*
 						<td>法庭</td>
-						<td>法院</td>			
+						<td>法院</td>
+					*/}		
 					</tr>
 					</thead>
 					<tbody>
@@ -163,8 +164,10 @@ var Court = React.createClass({
 				<td>{this.props.courtnm}</td>
 				<td>{this.props.dpt}</td>
 				<td>{this.props.courtkd}</td>
+				{/*
 				<td>{this.props.courtid}</td>
-				<td>{this.props.crtid}</td>			
+				<td>{this.props.crtid}</td>	
+				*/}			
 			</tr>
 		);
 	}	

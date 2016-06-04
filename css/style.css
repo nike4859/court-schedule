@@ -10,3 +10,22 @@ body {
     padding: 20px 15px;
     //text-align: center;
 }
+
+.title-area {
+    //padding-top: 5.4rem;
+    //padding-bottom: 6.5rem;
+    padding: 5px;
+    /*版權區文字顏色*/
+    
+    //background: #ffffff;
+    position: relative;
+    display: block;
+    //z-index: 100;
+    text-align: center;
+    /*版權區背景色*/
+    
+    //background-color: #00b8e0;
+    //background-color: #01B470;
+    background-image: radial-gradient(at top left, #cf8020 0%, #fce09a 100%);
+    color: white;
+}
