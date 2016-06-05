@@ -11,6 +11,7 @@ var CourtBox = React.createClass({
 		});
 	},
 	loadCommentsFromServer: function(){
+		//抓取法庭資料
 		$.ajax({
 			url:this.props.url,
     		crossDomain: true,
@@ -21,6 +22,7 @@ var CourtBox = React.createClass({
 				this.setState({data:data.query.results.DATA.rowid});
 				//console.log(data.query.results.DATA.rowid);
 				//console.log(data.query.results.DATA);
+				addSctollTop();
 			}.bind(this),
 			error: function(xhr, status, err){
 				console.error(this.props.url, status, err.toString());
@@ -36,14 +38,15 @@ var CourtBox = React.createClass({
 	render: function(){
 		return (
 			<div className="queryBox">
-				<QueryForm filterCourtNm={this.state.filterCourtNm} onFilter={this.handleFilter}/>
+
+				<FilterForm filterCourtNm={this.state.filterCourtNm} onFilter={this.handleFilter}/>
 				<CourtList data={this.state.data} filterCourtNm={this.state.filterCourtNm}/>
 			</div>
 		);
 	}
 });
 
-var QueryForm = React.createClass({
+var FilterForm = React.createClass({
 	handleFilterChange: function(e) {
     	this.props.onFilter(
     		e.target.value
@@ -83,7 +86,7 @@ var QueryForm = React.createClass({
 
 var CourtList = React.createClass({
 	render: function() {
-		console.log('out:'+this.props.filterCourtNm);
+		//console.log('out:'+this.props.filterCourtNm);
 		var filterCourtNm = this.props.filterCourtNm.trim();
 		var courtNodes = this.props.data.map(function(court){
 			if(!filterCourtNm){			
@@ -112,7 +115,9 @@ var CourtList = React.createClass({
 					<thead>
 					<tr>
 						<td>序號</td>
+						{/*
 						<td>類別</td>
+						*/}	
 						<td>年度</td>
 						<td>字別</td>
 						<td>案號</td>
@@ -121,10 +126,10 @@ var CourtList = React.createClass({
 						<td>法庭</td>
 						<td>股別</td>
 						<td>庭類</td>
-					{/*
+						{/*
 						<td>法庭</td>
 						<td>法院</td>
-					*/}		
+						*/}		
 					</tr>
 					</thead>
 					<tbody>
@@ -155,10 +160,12 @@ var Court = React.createClass({
 		return (
 			<tr>
 				<td>{this.props.num}</td>
+				{/*
 				<td>{this.props.sys}</td>
+				*/}	
 				<td>{this.props.crmyy}</td>
 				<td>{this.props.crmid}</td>
-				<td>{this.props.crmno}</td>
+				<td>{Number(this.props.crmno)}</td>
 				<td>{this.props.courtdate}</td>	
 				<td>{this.props.courtime}</td>
 				<td>{this.props.courtnm}</td>
@@ -172,12 +179,35 @@ var Court = React.createClass({
 		);
 	}	
 });
+
+//取得法院查詢的YQL URL
+function getCourtUrl(crtid, sys){
+	if(!crtid || !sys){//empty
+		return;
+	}
+	return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_COURTDATA.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"'&format=json&callback="
+}
+
+//處理TOP按鈕，等資料載入完再呼叫
+function addSctollTop() {
+    // Only enable if the document has a long scroll bar
+    // Note the window height + offset
+    if (($(window).height() + 100) < $(document).height()) {
+        $('#top-link-block').removeClass('hidden').affix({
+            // how far to scroll down before link "slides" into view
+            offset: {
+                top: 100
+            }
+        });
+    }
+};
+
 /*
 cross domain處理YQL
 http://clayliao.blogspot.tw/2011/03/yqlintroduxtion.html
 */
 //http://210.69.124.207/abbs/wkw/WHD_PDA_GET_COURTDATA.jsp?crtid=TYD&sys=H
 ReactDOM.render(
-	<CourtBox url="https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_COURTDATA.jsp%3Fcrtid%3DTYD%26sys%3DH'&format=json&callback=" pollInterval={200000}/>,
+	<CourtBox url={getCourtUrl("TYD","H")} pollInterval={200000}/>,
 	document.getElementById('content')
 );

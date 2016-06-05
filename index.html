@@ -18,24 +18,33 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
 	-->
 	<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
-	<script src="scripts/browser.min.js"></script>
-
+	
 	<!--
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
     -->
+    <script src="scripts/browser.min.js"></script>
+
     <!--
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>-->
 
 	<!-- Latest compiled and minified CSS -->
-
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    
 </head>
 
 <body>
     <div class="title-area">
-        <h1 className="text-center">法院庭期查詢</h1>
+        <h1 class="text-center">法院庭期查詢</h1>
 	</div>
     <div id="content"></div>
+    <!-- 回到最上層 -->
+    <span id="top-link-block" class="hidden">
+    <a href="#top" class="btn btn-default"  onclick="$('html,body').animate({scrollTop:0},'slow');this.blur();return false;">
+        <i class="glyphicon glyphicon-chevron-up"></i>TOP
+    </a>
+    </spam>
+    <!-- /top-link-block -->
+
 	<script type="text/babel" src="scripts/query_com.js"></script>
 	<script type="text/babel"></script>
 </body>
