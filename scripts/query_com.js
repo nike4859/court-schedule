@@ -109,7 +109,7 @@ var QueryForm = React.createClass({
 				<h4>查詢</h4>
 				<form onSubmit={this.handleSubmit} className="form-inline">
 					<div className="form-group">
-					<select ref="crtidInput" onChange={this.handleQueryChange} className="form-control">
+					<select ref="crtidInput" onChange={this.handleQueryChange} className="form-control" value="TYD">
 						<option value="TPD">臺灣臺北地方法院</option>
 						<option value="TYD">臺灣桃園地方法院</option>
 						<option value="CLE">臺灣桃園地方法院中壢簡易庭</option>
@@ -117,7 +117,7 @@ var QueryForm = React.createClass({
 					</select>
 					</div>
 					<div className="form-group">
-					<select ref="sysInput" onChange={this.handleQueryChange} className="form-control">
+					<select ref="sysInput" onChange={this.handleQueryChange} className="form-control" value="H">
 						<option value="V">民事</option>
 						<option value="H">刑事</option>
 						<option value="I">少年</option>
