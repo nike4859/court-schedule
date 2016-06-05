@@ -2,50 +2,137 @@ var CourtBox = React.createClass({
 	getInitialState: function(){
 		return {
 			data:[],
-			filterCourtNm: ''
+			filterCourtNm: '',//法庭
+			courtNms:[],//法庭清單
+			crtid:'',//法院
+			sys:''//庭別
 		};
 	},
-	handleFilter: function(filterCourtNm){
+	//設定篩選參數
+	handleFilterInput: function(filterCourtNm){
 		this.setState({
 			filterCourtNm: filterCourtNm
 		});
 	},
-	loadCommentsFromServer: function(){
+	//設定查詢參數
+	handeleQueryInput: function(crtid, sys){
+		this.setState({
+			crtid: crtid,
+			sys: sys,
+		});
+	},
+	//查詢法院案件
+	queryCourts: function(crtid, sys){
+		//console.log(this.state.crtid+ this.state.sys);
+		//console.log(crtid+sys);
+		this.loadCourtsFromServer(crtid, sys);
+		this.setState({
+			crtid: crtid,
+			sys: sys,
+			filterCourtNm: ''
+		});
+	},
+	//讀取資料
+	loadCourtsFromServer: function(crtid, sys){
+		var url = getCourtUrl(crtid,sys);
+		console.debug(url);
 		//抓取法庭資料
 		$.ajax({
-			url:this.props.url,
+			url: url,
     		crossDomain: true,
     		//dataType: 'jsonp xml',
     		dataType: 'json',
 			cache: false,
 			success: function(data){
-				this.setState({data:data.query.results.DATA.rowid});
-				//console.log(data.query.results.DATA.rowid);
-				//console.log(data.query.results.DATA);
-				addSctollTop();
+				var array = data.query.results.DATA.rowid;
+				if(array){
+					this.setState({data:array});
+					//console.log(data.query.results.DATA.rowid);
+					//console.log(data.query.results.DATA);
+					
+					//console.time("concatenation");
+					/*
+					//此方法效能不佳
+					var nm = array.map(function(obj) { return obj.courtnm; });
+					nm = nm.filter(function(v,i) { return nm.indexOf(v) == i; });
+					*/
+					var nm = getUniqueList(array,"courtnm");//取出不重複法庭
+					nm.sort();
+					this.setState({courtNms:nm});
+					//console.timeEnd("concatenation");
+					//console.log(nm);
+					addSctollTop();
+				}else{
+					console.log("Courts is empty.");
+					this.setState({data:[], courtNms:[]});
+				}
 			}.bind(this),
 			error: function(xhr, status, err){
-				console.error(this.props.url, status, err.toString());
+				console.error(url, status, err.toString());
 			}.bind(this)
 
 		});
 	},
 	//componentDidMount is a method called automatically by React after a component is rendered for the first time. 
 	componentDidMount: function(){
-		this.loadCommentsFromServer();
+		//console.log('test');
+		//this.loadCourtsFromServer("TYD","H");
 		//setInterval(this.loadCommentsFromServer, this.props.pollInterval);
 	},
 	render: function(){
 		return (
 			<div className="queryBox">
-
-				<FilterForm filterCourtNm={this.state.filterCourtNm} onFilter={this.handleFilter}/>
-				<CourtList data={this.state.data} filterCourtNm={this.state.filterCourtNm}/>
+				<QueryForm crtid={this.state.crtid} sys={this.state.sys} onQuery={this.handeleQueryInput} submitQuery={this.queryCourts} />
+				<FilterForm courtNms={this.state.courtNms} filterCourtNm={this.state.filterCourtNm} onFilter={this.handleFilterInput} />
+				<CourtList data={this.state.data} filterCourtNm={this.state.filterCourtNm} />
 			</div>
 		);
 	}
 });
 
+var QueryForm = React.createClass({
+	handleQueryChange: function(e){
+		this.props.onQuery(
+			this.refs.crtidInput.value,
+			this.refs.sysInput.value
+		);
+	},
+	handleSubmit: function(e){
+		//console.log(this.refs.crtidInput.value+this.refs.sysInput.value);
+		this.props.submitQuery(this.refs.crtidInput.value, this.refs.sysInput.value);
+		e.preventDefault();//要先取消避免刷新頁面
+		this.refs.submitbtn.blur();
+	},
+	render: function() {
+		return (
+			<div className="content">
+				<h4>查詢</h4>
+				<form onSubmit={this.handleSubmit} className="form-inline">
+					<div className="form-group">
+					<select ref="crtidInput" onChange={this.handleQueryChange} className="form-control">
+						<option value="TPD">臺灣臺北地方法院</option>
+						<option value="TYD">臺灣桃園地方法院</option>
+						<option value="CLE">臺灣桃園地方法院中壢簡易庭</option>
+						<option value="TYE">臺灣桃園地方法院桃園簡易庭</option>			
+					</select>
+					</div>
+					<div className="form-group">
+					<select ref="sysInput" onChange={this.handleQueryChange} className="form-control">
+						<option value="V">民事</option>
+						<option value="H">刑事</option>
+						<option value="I">少年</option>
+						<option value="A">行政</option>			
+					</select>
+					</div>
+					<button ref="submitbtn" type="submit" className="btn btn-default">查詢</button>
+				</form>
+			</div>
+		);
+	}
+});
+
+
+//過濾條件
 var FilterForm = React.createClass({
 	handleFilterChange: function(e) {
     	this.props.onFilter(
@@ -53,12 +140,17 @@ var FilterForm = React.createClass({
     	);
   	},
 	render: function() {
+		var courtNmNodes = this.props.courtNms.map(function(courtNm){
+			return(<option value={courtNm}>{courtNm}</option>)
+		});
 		return (
 			<div className="content">
 				<h4>篩選</h4>
 				<form>
-					<select onChange={this.handleFilterChange} className="form-control">
+					<select onChange={this.handleFilterChange} className="form-control" value={this.props.filterCourtNm}>
 						<option value="">所有法庭</option>
+						{courtNmNodes}
+						{/*
 						<option value="第一法庭">第一法庭</option>
 						<option value="第二法庭">第二法庭</option>
 						<option value="第三法庭">第三法庭</option>
@@ -76,7 +168,8 @@ var FilterForm = React.createClass({
 						<option value="第十五法庭">第十五法庭</option>
 						<option value="第十六法庭">第十六法庭</option>
 						<option value="第十七法庭">第十七法庭</option>
-						<option value="第十八法庭">第十八法庭</option>				
+						<option value="第十八法庭">第十八法庭</option>	
+						*/}			
 					</select>
 				</form>
 			</div>
@@ -84,6 +177,7 @@ var FilterForm = React.createClass({
 	}
 });
 
+//案件清單
 var CourtList = React.createClass({
 	render: function() {
 		//console.log('out:'+this.props.filterCourtNm);
@@ -141,6 +235,7 @@ var CourtList = React.createClass({
 	}
 });
 
+//案件
 /*
 courtdate:"1050602"
 courtid:"0097"
@@ -186,7 +281,7 @@ function getCourtUrl(crtid, sys){
 		return;
 	}
 	return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_COURTDATA.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"'&format=json&callback="
-}
+};
 
 //處理TOP按鈕，等資料載入完再呼叫
 function addSctollTop() {
@@ -202,12 +297,24 @@ function addSctollTop() {
     }
 };
 
+function getUniqueList(array, property){
+	var unique = {};
+	var distinct = [];
+	for( var i in array ){
+	 if( typeof(unique[array[i][property]]) == "undefined"){
+	  distinct.push(array[i][property]);
+	 }
+	 unique[array[i][property]] = 0;
+	}
+	return distinct;
+};
+
 /*
 cross domain處理YQL
 http://clayliao.blogspot.tw/2011/03/yqlintroduxtion.html
 */
 //http://210.69.124.207/abbs/wkw/WHD_PDA_GET_COURTDATA.jsp?crtid=TYD&sys=H
 ReactDOM.render(
-	<CourtBox url={getCourtUrl("TYD","H")} pollInterval={200000}/>,
+	<CourtBox pollInterval={200000}/>,
 	document.getElementById('content')
 );
