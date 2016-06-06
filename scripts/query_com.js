@@ -3,15 +3,19 @@ var CourtBox = React.createClass({
 		return {
 			data:[],
 			filterCourtNm: '',//法庭
+			filterDpt:'',
 			courtNms:[],//法庭清單
-			crtid:'',//法院
-			sys:''//庭別
+			dpts:[],
+			crtid:'TYD',//法院
+			sys:'H',//庭別
+			isloading: false//是否讀取中
 		};
 	},
 	//設定篩選參數
-	handleFilterInput: function(filterCourtNm){
+	handleFilterInput: function(filterCourtNm, filterDpt){
 		this.setState({
-			filterCourtNm: filterCourtNm
+			filterCourtNm: filterCourtNm,
+			filterDpt: filterDpt
 		});
 	},
 	//設定查詢參數
@@ -34,6 +38,7 @@ var CourtBox = React.createClass({
 	},
 	//讀取資料
 	loadCourtsFromServer: function(crtid, sys){
+		this.setState({isloading: true});
 		var url = getCourtUrl(crtid,sys);
 		console.debug(url);
 		//抓取法庭資料
@@ -58,13 +63,16 @@ var CourtBox = React.createClass({
 					*/
 					var nm = getUniqueList(array,"courtnm");//取出不重複法庭
 					nm.sort();
-					this.setState({courtNms:nm});
+					var dpt = getUniqueList(array,"dpt");//取出不重複股別
+					dpt.sort();
+					this.setState({courtNms:nm, dpts:dpt});
 					//console.timeEnd("concatenation");
 					//console.log(nm);
 					addSctollTop();
+					this.setState({isloading: false});
 				}else{
 					console.log("Courts is empty.");
-					this.setState({data:[], courtNms:[]});
+					this.setState({data:[], courtNms:[], dpts:[]});//清空資料
 				}
 			}.bind(this),
 			error: function(xhr, status, err){
@@ -83,8 +91,9 @@ var CourtBox = React.createClass({
 		return (
 			<div className="queryBox">
 				<QueryForm crtid={this.state.crtid} sys={this.state.sys} onQuery={this.handeleQueryInput} submitQuery={this.queryCourts} />
-				<FilterForm courtNms={this.state.courtNms} filterCourtNm={this.state.filterCourtNm} onFilter={this.handleFilterInput} />
-				<CourtList data={this.state.data} filterCourtNm={this.state.filterCourtNm} />
+				<FilterForm courtNms={this.state.courtNms} dpts={this.state.dpts}  filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt} onFilter={this.handleFilterInput} />
+				{/*<LoadingComp isloading={this.state.isloading} />*/}
+				<CourtList data={this.state.data} filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt}/>
 			</div>
 		);
 	}
@@ -109,7 +118,7 @@ var QueryForm = React.createClass({
 				<h4>查詢</h4>
 				<form onSubmit={this.handleSubmit} className="form-inline">
 					<div className="form-group">
-					<select ref="crtidInput" onChange={this.handleQueryChange} className="form-control" value="TYD">
+					<select ref="crtidInput" onChange={this.handleQueryChange} className="form-control" value={this.props.crtid}>
 						<option value="TPD">臺灣臺北地方法院</option>
 						<option value="TYD">臺灣桃園地方法院</option>
 						<option value="CLE">臺灣桃園地方法院中壢簡易庭</option>
@@ -117,7 +126,7 @@ var QueryForm = React.createClass({
 					</select>
 					</div>
 					<div className="form-group">
-					<select ref="sysInput" onChange={this.handleQueryChange} className="form-control" value="H">
+					<select ref="sysInput" onChange={this.handleQueryChange} className="form-control" value={this.props.sys}>
 						<option value="V">民事</option>
 						<option value="H">刑事</option>
 						<option value="I">少年</option>
@@ -136,18 +145,23 @@ var QueryForm = React.createClass({
 var FilterForm = React.createClass({
 	handleFilterChange: function(e) {
     	this.props.onFilter(
-    		e.target.value
+    		this.refs.courtNmInput.value,
+    		this.refs.dptInput.value
     	);
   	},
 	render: function() {
 		var courtNmNodes = this.props.courtNms.map(function(courtNm){
 			return(<option value={courtNm}>{courtNm}</option>)
 		});
+		var dptNodes = this.props.dpts.map(function(dpt){
+			return(<option value={dpt}>{dpt}</option>)
+		});
 		return (
 			<div className="content">
 				<h4>篩選</h4>
-				<form>
-					<select onChange={this.handleFilterChange} className="form-control" value={this.props.filterCourtNm}>
+				<form className="form-inline">
+					<div className="form-group">
+					<select ref="courtNmInput" onChange={this.handleFilterChange} className="form-control" value={this.props.filterCourtNm}>
 						<option value="">所有法庭</option>
 						{courtNmNodes}
 						{/*
@@ -171,6 +185,13 @@ var FilterForm = React.createClass({
 						<option value="第十八法庭">第十八法庭</option>	
 						*/}			
 					</select>
+					</div>
+					<div className="form-group">
+					<select ref="dptInput" onChange={this.handleFilterChange} className="form-control" value={this.props.filterDpt}>
+						<option value="">所有股別</option>
+						{dptNodes}	
+					</select>
+					</div>
 				</form>
 			</div>
 		);
@@ -179,29 +200,22 @@ var FilterForm = React.createClass({
 
 //案件清單
 var CourtList = React.createClass({
+	test: function(court){
+		var filterCourtNm = this.props.filterCourtNm.trim();
+		var filterDpt = this.props.filterDpt.trim();
+		return (!filterCourtNm || court.courtnm === filterCourtNm) && (!filterDpt || court.dpt === filterDpt);
+	},
 	render: function() {
 		//console.log('out:'+this.props.filterCourtNm);
 		var filterCourtNm = this.props.filterCourtNm.trim();
-		var courtNodes = this.props.data.map(function(court){
-			if(!filterCourtNm){			
-				return(
-					<Court key={court.num} num={court.num} sys={court.sys} crmyy={court.crmyy}
-						crmid={court.crmid} crmno={court.crmno} courtdate={court.courtdate}
-						courtime={court.courtime} courtnm={court.courtnm} dpt={court.dpt}
-						courtkd={court.courtkd} courtid={court.courtid} crtid={court.crtid}>
-					</Court>
-				); 
-			}else{
-				if(court.courtnm === filterCourtNm){
-					return(
-						<Court key={court.num} num={court.num} sys={court.sys} crmyy={court.crmyy}
-							crmid={court.crmid} crmno={court.crmno} courtdate={court.courtdate}
-							courtime={court.courtime} courtnm={court.courtnm} dpt={court.dpt}
-							courtkd={court.courtkd} courtid={court.courtid} crtid={court.crtid}>
-						</Court>
-					); 
-				}
-			}
+		var courtNodes = this.props.data.filter(this.test).map(function(court){
+			return(
+				<Court key={court.num} num={court.num} sys={court.sys} crmyy={court.crmyy}
+					crmid={court.crmid} crmno={court.crmno} courtdate={court.courtdate}
+					courtime={court.courtime} courtnm={court.courtnm} dpt={court.dpt}
+					courtkd={court.courtkd} courtid={court.courtid} crtid={court.crtid}>
+				</Court>
+			); 
 		});
 		return (
 			<div className="content">
@@ -273,6 +287,19 @@ var Court = React.createClass({
 			</tr>
 		);
 	}	
+});
+
+//目前還沒用到
+var LoadingComp = React.createClass({
+	render: function() {
+		if(this.props.isloading){
+			return (
+				<img src="image/loading.gif" />
+			);
+		}else{
+			return(<div className="hidden"></div>);
+		}
+	}
 });
 
 //取得法院查詢的YQL URL
