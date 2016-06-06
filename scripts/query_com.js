@@ -8,7 +8,8 @@ var CourtBox = React.createClass({
 			dpts:[],
 			crtid:'TYD',//法院
 			sys:'H',//庭別
-			isloading: false//是否讀取中
+			isloading: false,//是否讀取中
+			uiDisabled: false
 		};
 	},
 	//設定篩選參數
@@ -29,6 +30,8 @@ var CourtBox = React.createClass({
 	queryCourts: function(crtid, sys){
 		//console.log(this.state.crtid+ this.state.sys);
 		//console.log(crtid+sys);
+		this.setState({uiDisabled:true});//停用按鈕
+		this.setState({isloading: true});
 		this.loadCourtsFromServer(crtid, sys);
 		this.setState({
 			crtid: crtid,
@@ -38,7 +41,6 @@ var CourtBox = React.createClass({
 	},
 	//讀取資料
 	loadCourtsFromServer: function(crtid, sys){
-		this.setState({isloading: true});
 		var url = getCourtUrl(crtid,sys);
 		console.debug(url);
 		//抓取法庭資料
@@ -74,10 +76,14 @@ var CourtBox = React.createClass({
 					console.log("Courts is empty.");
 					this.setState({data:[], courtNms:[], dpts:[]});//清空資料
 				}
+				
 			}.bind(this),
 			error: function(xhr, status, err){
 				console.error(url, status, err.toString());
-			}.bind(this)
+			}.bind(this),
+			complete: function(){
+				this.setState({uiDisabled:false});//停用按鈕
+			}.bind(this),
 
 		});
 	},
@@ -90,8 +96,8 @@ var CourtBox = React.createClass({
 	render: function(){
 		return (
 			<div className="queryBox">
-				<QueryForm crtid={this.state.crtid} sys={this.state.sys} onQuery={this.handeleQueryInput} submitQuery={this.queryCourts} />
-				<FilterForm courtNms={this.state.courtNms} dpts={this.state.dpts}  filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt} onFilter={this.handleFilterInput} />
+				<QueryForm crtid={this.state.crtid} sys={this.state.sys} onQuery={this.handeleQueryInput} submitQuery={this.queryCourts} uiDisabled={this.state.uiDisabled} />
+				<FilterForm courtNms={this.state.courtNms} dpts={this.state.dpts}  filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt} onFilter={this.handleFilterInput} uiDisabled={this.state.uiDisabled} />
 				{/*<LoadingComp isloading={this.state.isloading} />*/}
 				<CourtList data={this.state.data} filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt}/>
 			</div>
@@ -110,7 +116,7 @@ var QueryForm = React.createClass({
 		//console.log(this.refs.crtidInput.value+this.refs.sysInput.value);
 		this.props.submitQuery(this.refs.crtidInput.value, this.refs.sysInput.value);
 		e.preventDefault();//要先取消避免刷新頁面
-		this.refs.submitbtn.blur();
+		this.refs.submitBtn.blur();
 	},
 	render: function() {
 		return (
@@ -133,7 +139,7 @@ var QueryForm = React.createClass({
 						<option value="A">行政</option>			
 					</select>
 					</div>
-					<button ref="submitbtn" type="submit" className="btn btn-default">查詢</button>
+					<button ref="submitBtn" type="submit" className="btn btn-default" disabled={this.props.uiDisabled}>查詢</button>
 				</form>
 			</div>
 		);
@@ -156,12 +162,16 @@ var FilterForm = React.createClass({
 		var dptNodes = this.props.dpts.map(function(dpt){
 			return(<option value={dpt}>{dpt}</option>)
 		});
+		var opts={};
+		if (this.props.uiDisabled) {
+            opts['disabled'] = 'disabled';
+        }
 		return (
 			<div className="content">
 				<h4>篩選</h4>
 				<form className="form-inline">
 					<div className="form-group">
-					<select ref="courtNmInput" onChange={this.handleFilterChange} className="form-control" value={this.props.filterCourtNm}>
+					<select ref="courtNmInput" onChange={this.handleFilterChange} className="form-control" value={this.props.filterCourtNm} {...opts}>
 						<option value="">所有法庭</option>
 						{courtNmNodes}
 						{/*
@@ -187,7 +197,7 @@ var FilterForm = React.createClass({
 					</select>
 					</div>
 					<div className="form-group">
-					<select ref="dptInput" onChange={this.handleFilterChange} className="form-control" value={this.props.filterDpt}>
+					<select ref="dptInput" onChange={this.handleFilterChange} className="form-control" value={this.props.filterDpt} {...opts}>
 						<option value="">所有股別</option>
 						{dptNodes}	
 					</select>
@@ -222,8 +232,8 @@ var CourtList = React.createClass({
 				<table className="table table-bordered table-striped">
 					<thead>
 					<tr>
-						<td>序號</td>
 						{/*
+						<td>序號</td>
 						<td>類別</td>
 						*/}	
 						<td>年度</td>
@@ -268,8 +278,8 @@ var Court = React.createClass({
 	render: function() {
 		return (
 			<tr>
-				<td>{this.props.num}</td>
 				{/*
+				<td>{this.props.num}</td>
 				<td>{this.props.sys}</td>
 				*/}	
 				<td>{this.props.crmyy}</td>
