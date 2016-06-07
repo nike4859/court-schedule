@@ -119,6 +119,10 @@ var QueryForm = React.createClass({
 		this.refs.submitBtn.blur();
 	},
 	render: function() {
+		var uiClass = "";
+		if(!this.props.uiDisabled){
+			uiClass = "hidden";
+		}
 		return (
 			<div className="content">
 				<h4>查詢</h4>
@@ -140,6 +144,7 @@ var QueryForm = React.createClass({
 					</select>
 					</div>
 					<button ref="submitBtn" type="submit" className="btn btn-default" disabled={this.props.uiDisabled}>查詢</button>
+					<img src="image/loading.gif" className={uiClass}/>
 				</form>
 			</div>
 		);
@@ -313,11 +318,15 @@ var LoadingComp = React.createClass({
 });
 
 //取得法院查詢的YQL URL
-function getCourtUrl(crtid, sys){
+function getCourtUrl(crtid, sys, dateBegin, dateEnd){
+	if(!dateBegin || !dateEnd){
+		dateBegin = '';
+		dateEnd = '';
+	}
 	if(!crtid || !sys){//empty
 		return;
 	}
-	return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_COURTDATA.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"'&format=json&callback="
+	return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_COURTDATA.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26date1%3D"+dateBegin+"%26date2%3D"+dateEnd+"'&format=json&callback=";
 };
 
 //處理TOP按鈕，等資料載入完再呼叫
