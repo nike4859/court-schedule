@@ -27,12 +27,12 @@ var CourtBox = React.createClass({
 		});
 	},
 	//查詢法院案件
-	queryCourts: function(crtid, sys){
+	queryCourts: function(crtid, sys, date1, date2){
 		//console.log(this.state.crtid+ this.state.sys);
 		//console.log(crtid+sys);
 		this.setState({uiDisabled:true});//停用按鈕
 		this.setState({isloading: true});
-		this.loadCourtsFromServer(crtid, sys);
+		this.loadCourtsFromServer(crtid, sys,date1,date2);
 		this.setState({
 			crtid: crtid,
 			sys: sys,
@@ -40,8 +40,8 @@ var CourtBox = React.createClass({
 		});
 	},
 	//讀取資料
-	loadCourtsFromServer: function(crtid, sys){
-		var url = getCourtUrl(crtid,sys);
+	loadCourtsFromServer: function(crtid, sys,date1,date2){
+		var url = getCourtUrl(crtid,sys,date1,date2);
 		console.debug(url);
 		//抓取法庭資料
 		$.ajax({
@@ -114,10 +114,29 @@ var QueryForm = React.createClass({
 	},
 	handleSubmit: function(e){
 		//console.log(this.refs.crtidInput.value+this.refs.sysInput.value);
-		this.props.submitQuery(this.refs.crtidInput.value, this.refs.sysInput.value);
+		var date1 = ADtoROC(this.refs.date1.value);
+		var date2 = ADtoROC(this.refs.date2.value);
+		console.log(date1+'  '+date2);
+		this.props.submitQuery(this.refs.crtidInput.value, this.refs.sysInput.value, date1, date2);
 		e.preventDefault();//要先取消避免刷新頁面
 		this.refs.submitBtn.blur();
+		$(this).blur();
 	},
+	componentDidMount: function(){
+	  	$(function() {
+	  		var today = new Date();
+	  		var days = 7;
+	    	$( "#datepicker1" ).datepicker({dateFormat:"yy-mm-dd"}).datepicker("setDate", today);
+	    	today.setDate(today.getDate() + days);//預設加上N天
+	    	$( "#datepicker2" ).datepicker({dateFormat:"yy-mm-dd"}).datepicker("setDate", today);
+	    	//避免移動裝置鍵盤跳出
+	    	$('#datepicker1,#datepicker2').on('focus', function(e) {
+    			e.preventDefault();
+    			$(this).blur();
+			});
+
+	  	});
+	},		
 	render: function() {
 		var uiClass = "";
 		if(!this.props.uiDisabled){
@@ -126,25 +145,34 @@ var QueryForm = React.createClass({
 		return (
 			<div className="content">
 				<h4>查詢</h4>
-				<form onSubmit={this.handleSubmit} className="form-inline">
-					<div className="form-group">
-					<select ref="crtidInput" onChange={this.handleQueryChange} className="form-control" value={this.props.crtid}>
-						<option value="TPD">臺灣臺北地方法院</option>
-						<option value="TYD">臺灣桃園地方法院</option>
-						<option value="CLE">臺灣桃園地方法院中壢簡易庭</option>
-						<option value="TYE">臺灣桃園地方法院桃園簡易庭</option>			
-					</select>
+				<form onSubmit={this.handleSubmit}>
+					<div className="form-group form-inline">
+						<div className="form-group">
+							<select ref="crtidInput" onChange={this.handleQueryChange} className="form-control" value={this.props.crtid}>
+								<option value="TPD">臺灣臺北地方法院</option>
+								<option value="TYD">臺灣桃園地方法院</option>
+								<option value="CLE">臺灣桃園地方法院中壢簡易庭</option>
+								<option value="TYE">臺灣桃園地方法院桃園簡易庭</option>			
+							</select>
+						</div>
+						<div className="form-group">
+							<select ref="sysInput" onChange={this.handleQueryChange} className="form-control" value={this.props.sys}>
+								<option value="V">民事</option>
+								<option value="H">刑事</option>
+								<option value="I">少年</option>
+								<option value="A">行政</option>			
+							</select>
+						</div>
+						<div className="form-group">
+							<button ref="submitBtn" type="submit" className="btn btn-default" disabled={this.props.uiDisabled}>查詢</button>
+							<img src="image/loading.gif" className={uiClass}/>
+						</div>
 					</div>
-					<div className="form-group">
-					<select ref="sysInput" onChange={this.handleQueryChange} className="form-control" value={this.props.sys}>
-						<option value="V">民事</option>
-						<option value="H">刑事</option>
-						<option value="I">少年</option>
-						<option value="A">行政</option>			
-					</select>
-					</div>
-					<button ref="submitBtn" type="submit" className="btn btn-default" disabled={this.props.uiDisabled}>查詢</button>
-					<img src="image/loading.gif" className={uiClass}/>
+					<div className="form-group form-inline">
+                    	<input type="text" ref="date1" id="datepicker1" placeholder="開始日期" className="form-control"/>
+                    	<label>至</label>
+                    	<input type="text" ref="date2" id="datepicker2" placeholder="結束日期" className="form-control"/>
+                	</div>
 				</form>
 			</div>
 		);
@@ -354,6 +382,12 @@ function getUniqueList(array, property){
 	}
 	return distinct;
 };
+
+function ADtoROC(ADdate){
+	var ADdateStr = ADdate.toString().replace(/-/g,'');//刪除-
+	var ROCdate = parseInt(ADdateStr.substring(0,4))-1911 + ADdateStr.substring(4);//西元轉民國
+	return ROCdate;
+}
 
 /*
 cross domain處理YQL
