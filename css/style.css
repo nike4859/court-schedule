@@ -51,3 +51,28 @@ body {
     right: 10px;
     /* padding from the left side of the window */
 }
+
+#addeventatc-block.affix-top {
+    position: absolute;
+    /* allows it to "slide" up into view */
+    
+    top: -82px;
+    /* negative of the offset - height of link element */
+    
+    right: 10px;
+    /* padding from the left side of the window */
+}
+
+#addeventatc-block.affix {
+    position: fixed;
+    /* keeps it on the bottom once in view */
+    
+    top: 18px;
+    /* height of link element */
+    
+    right: 10px;
+    /* padding from the left side of the window */
+}
+
+
+

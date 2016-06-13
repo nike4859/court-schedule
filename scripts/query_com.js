@@ -14,6 +14,9 @@ var CourtBox = React.createClass({
 	},
 	//設定篩選參數
 	handleFilterInput: function(filterCourtNm, filterDpt){
+		console.log(this.refs.title.textContent);
+		this.refs.title.textContent="123456";
+		console.log(this.refs.title.textContent);
 		this.setState({
 			filterCourtNm: filterCourtNm,
 			filterDpt: filterDpt
@@ -70,7 +73,7 @@ var CourtBox = React.createClass({
 					this.setState({courtNms:nm, dpts:dpt});
 					//console.timeEnd("concatenation");
 					//console.log(nm);
-					addSctollTop();
+					addScrollTop();
 					this.setState({isloading: false});
 				}else{
 					console.log("Courts is empty.");
@@ -92,6 +95,7 @@ var CourtBox = React.createClass({
 		//console.log('test');
 		//this.loadCourtsFromServer("TYD","H");
 		//setInterval(this.loadCommentsFromServer, this.props.pollInterval);
+		 addeventatc.refresh();//reload addevent
 	},
 	render: function(){
 		return (
@@ -100,6 +104,19 @@ var CourtBox = React.createClass({
 				<FilterForm courtNms={this.state.courtNms} dpts={this.state.dpts}  filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt} onFilter={this.handleFilterInput} uiDisabled={this.state.uiDisabled} />
 				{/*<LoadingComp isloading={this.state.isloading} />*/}
 				<CourtList data={this.state.data} filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt}/>
+				<span id="addeventatc-block" className="hidden btn btn-default">
+					<div title="Add to Calendar" className="addeventatc">
+					    <img src="image/icon-calendar-t1.png" alt="" />
+					    <span className="start">06/26/2016 09:00 AM</span>
+					    <span className="end">06/26/2016 11:00 AM</span>
+					    <span className="timezone">Asia/Taipei</span>
+					    <span ref="title" className="title">Summary of the event</span>
+					    <span className="description">Description of the event<br/>Example of a new line</span>
+					    <span className="location">Location of the event</span>
+					    <span className="all_day_event">false</span>
+					    <span className="date_format">MM/DD/YYYY</span>
+					</div>
+				</span>
 			</div>
 		);
 	}
@@ -126,9 +143,10 @@ var QueryForm = React.createClass({
 	  	$(function() {
 	  		var today = new Date();
 	  		var days = 7;
-	    	$( "#datepicker1" ).datepicker({dateFormat:"yy-mm-dd"}).datepicker("setDate", today);
+	  		var parameters = {dateFormat:"yy-mm-dd",showButtonPanel: true};
+	    	$( "#datepicker1" ).datepicker(parameters).datepicker("setDate", today);
 	    	today.setDate(today.getDate() + days);//預設加上N天
-	    	$( "#datepicker2" ).datepicker({dateFormat:"yy-mm-dd"}).datepicker("setDate", today);
+	    	$( "#datepicker2" ).datepicker(parameters).datepicker("setDate", today);
 	    	//避免移動裝置鍵盤跳出
 	    	$('#datepicker1,#datepicker2').on('focus', function(e) {
     			e.preventDefault();
@@ -243,7 +261,7 @@ var FilterForm = React.createClass({
 
 //案件清單
 var CourtList = React.createClass({
-	test: function(court){
+	condition: function(court){
 		var filterCourtNm = this.props.filterCourtNm.trim();
 		var filterDpt = this.props.filterDpt.trim();
 		return (!filterCourtNm || court.courtnm === filterCourtNm) && (!filterDpt || court.dpt === filterDpt);
@@ -251,11 +269,11 @@ var CourtList = React.createClass({
 	render: function() {
 		//console.log('out:'+this.props.filterCourtNm);
 		var filterCourtNm = this.props.filterCourtNm.trim();
-		var courtNodes = this.props.data.filter(this.test).map(function(court){
+		var courtNodes = this.props.data.filter(this.condition).map(function(court){
 			return(
 				<Court key={court.num} num={court.num} sys={court.sys} crmyy={court.crmyy}
 					crmid={court.crmid} crmno={court.crmno} courtdate={court.courtdate}
-					courtime={court.courtime} courtnm={court.courtnm} dpt={court.dpt}
+					courtime={court.courtime.insert(2,":")} courtnm={court.courtnm} dpt={court.dpt}
 					courtkd={court.courtkd} courtid={court.courtid} crtid={court.crtid}>
 				</Court>
 			); 
@@ -277,6 +295,7 @@ var CourtList = React.createClass({
 						<td>法庭</td>
 						<td>股別</td>
 						<td>庭類</td>
+						<td>加入日曆</td>
 						{/*
 						<td>法庭</td>
 						<td>法院</td>
@@ -323,6 +342,8 @@ var Court = React.createClass({
 				<td>{this.props.courtnm}</td>
 				<td>{this.props.dpt}</td>
 				<td>{this.props.courtkd}</td>
+				<td>
+				</td>
 				{/*
 				<td>{this.props.courtid}</td>
 				<td>{this.props.crtid}</td>	
@@ -358,11 +379,17 @@ function getCourtUrl(crtid, sys, dateBegin, dateEnd){
 };
 
 //處理TOP按鈕，等資料載入完再呼叫
-function addSctollTop() {
+function addScrollTop() {
     // Only enable if the document has a long scroll bar
     // Note the window height + offset
     if (($(window).height() + 100) < $(document).height()) {
         $('#top-link-block').removeClass('hidden').affix({
+            // how far to scroll down before link "slides" into view
+            offset: {
+                top: 100
+            }
+        });
+        $('#addeventatc-block').removeClass('hidden').affix({
             // how far to scroll down before link "slides" into view
             offset: {
                 top: 100
@@ -388,6 +415,13 @@ function ADtoROC(ADdate){
 	var ROCdate = parseInt(ADdateStr.substring(0,4))-1911 + ADdateStr.substring(4);//西元轉民國
 	return ROCdate;
 }
+
+String.prototype.insert = function (index, string) {
+  if (index > 0)
+    return this.substring(0, index) + string + this.substring(index, this.length);
+  else
+    return string + this;
+};
 
 /*
 cross domain處理YQL
