@@ -51,7 +51,10 @@ body {
     right: 10px;
     /* padding from the left side of the window */
 }
-
+.addeventatc{
+    /*add padding make button larger*/
+    /*padding: 5px 4px;*/
+}
 #addeventatc-block.affix-top {
     position: absolute;
     /* allows it to "slide" up into view */

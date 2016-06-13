@@ -106,7 +106,7 @@ var CourtBox = React.createClass({
 				<CourtList data={this.state.data} filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt}/>
 				<span id="addeventatc-block" className="hidden btn btn-default">
 					<div title="Add to Calendar" className="addeventatc">
-					    <img src="image/icon-calendar-t1.png" alt="" />
+					    <img src="image/calendar-clock.png" alt="" />
 					    <span className="start">06/26/2016 09:00 AM</span>
 					    <span className="end">06/26/2016 11:00 AM</span>
 					    <span className="timezone">Asia/Taipei</span>
@@ -295,7 +295,7 @@ var CourtList = React.createClass({
 						<td>法庭</td>
 						<td>股別</td>
 						<td>庭類</td>
-						<td>加入日曆</td>
+						<td><img src="image/calendar-clock.png" alt="" /></td>
 						{/*
 						<td>法庭</td>
 						<td>法院</td>
