@@ -14,8 +14,7 @@ var CourtBox = React.createClass({
 	},
 	//設定篩選參數
 	handleFilterInput: function(filterCourtNm, filterDpt){
-		console.log(this.refs.title.textContent);
-		this.refs.title.textContent="123456";
+		
 		console.log(this.refs.title.textContent);
 		this.setState({
 			filterCourtNm: filterCourtNm,
@@ -23,11 +22,25 @@ var CourtBox = React.createClass({
 		});
 	},
 	//設定查詢參數
-	handeleQueryInput: function(crtid, sys){
+	handleQueryInput: function(crtid, sys){
 		this.setState({
 			crtid: crtid,
 			sys: sys,
 		});
+	},
+	handleRadioInput:function(e){
+		var row = this.state.data[e.target.value];//抓出被選擇的資料
+		//console.log(this.refs.title.textContent);
+		var caseName = row.crmyy + "年 " + row.crmid + "字 第" +Number(row.crmno) + "號";
+		this.refs.title.textContent=caseName;
+		console.log(this.refs.title.textContent);
+		console.log(ROCtoAD(row.courtdate));
+		this.refs.start.textContent=ROCtoAD(row.courtdate) + " " + row.courtime.insert(2,":");
+		this.refs.end.textContent=ROCtoAD(row.courtdate) + "";
+		this.refs.description.innerHTML = caseName + "<br>" + 
+										"庭類:" + row.courtkd + "<br>" + 
+										"股別:" + row.dpt;
+		this.refs.location.textContent=row.courtnm;
 	},
 	//查詢法院案件
 	queryCourts: function(crtid, sys, date1, date2){
@@ -100,21 +113,21 @@ var CourtBox = React.createClass({
 	render: function(){
 		return (
 			<div className="queryBox">
-				<QueryForm crtid={this.state.crtid} sys={this.state.sys} onQuery={this.handeleQueryInput} submitQuery={this.queryCourts} uiDisabled={this.state.uiDisabled} />
+				<QueryForm crtid={this.state.crtid} sys={this.state.sys} onQuery={this.handleQueryInput} submitQuery={this.queryCourts} uiDisabled={this.state.uiDisabled} />
 				<FilterForm courtNms={this.state.courtNms} dpts={this.state.dpts}  filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt} onFilter={this.handleFilterInput} uiDisabled={this.state.uiDisabled} />
 				{/*<LoadingComp isloading={this.state.isloading} />*/}
-				<CourtList data={this.state.data} filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt}/>
+				<CourtList data={this.state.data} filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt} onSelectRadio={this.handleRadioInput}/>
 				<span id="addeventatc-block" className="hidden btn btn-default">
 					<div title="Add to Calendar" className="addeventatc">
-					    <img src="image/calendar-clock.png" alt="" />
-					    <span className="start">06/26/2016 09:00 AM</span>
-					    <span className="end">06/26/2016 11:00 AM</span>
+					    <img src="image/calendar-clock32.png" alt="" />
+					    <span ref="start" className="start"></span>
+					    <span ref="end" className="end"></span>
 					    <span className="timezone">Asia/Taipei</span>
-					    <span ref="title" className="title">Summary of the event</span>
-					    <span className="description">Description of the event<br/>Example of a new line</span>
-					    <span className="location">Location of the event</span>
+					    <span ref="title" className="title"></span>
+					    <span ref="description" className="description"></span>
+					    <span ref="location" className="location"></span>
 					    <span className="all_day_event">false</span>
-					    <span className="date_format">MM/DD/YYYY</span>
+					    <span className="date_format">YYYY-MM-DD</span>
 					</div>
 				</span>
 			</div>
@@ -266,18 +279,19 @@ var CourtList = React.createClass({
 		var filterDpt = this.props.filterDpt.trim();
 		return (!filterCourtNm || court.courtnm === filterCourtNm) && (!filterDpt || court.dpt === filterDpt);
 	},
-	render: function() {
-		//console.log('out:'+this.props.filterCourtNm);
-		var filterCourtNm = this.props.filterCourtNm.trim();
-		var courtNodes = this.props.data.filter(this.condition).map(function(court){
+	mapFunction: function(court){
 			return(
 				<Court key={court.num} num={court.num} sys={court.sys} crmyy={court.crmyy}
 					crmid={court.crmid} crmno={court.crmno} courtdate={court.courtdate}
-					courtime={court.courtime.insert(2,":")} courtnm={court.courtnm} dpt={court.dpt}
-					courtkd={court.courtkd} courtid={court.courtid} crtid={court.crtid}>
+					courtime={court.courtime} courtnm={court.courtnm} dpt={court.dpt}
+					courtkd={court.courtkd} courtid={court.courtid} crtid={court.crtid} onSelectRadio={this.props.onSelectRadio}>
 				</Court>
 			); 
-		});
+		},
+	render: function() {
+		//console.log('out:'+this.props.filterCourtNm);
+		var filterCourtNm = this.props.filterCourtNm.trim();
+		var courtNodes = this.props.data.filter(this.condition).map(this.mapFunction);
 		return (
 			<div className="content">
 				<table className="table table-bordered table-striped">
@@ -295,7 +309,7 @@ var CourtList = React.createClass({
 						<td>法庭</td>
 						<td>股別</td>
 						<td>庭類</td>
-						<td><img src="image/calendar-clock.png" alt="" /></td>
+						<td><img src="image/calendar-clock24.png" alt="" /></td>
 						{/*
 						<td>法庭</td>
 						<td>法院</td>
@@ -338,11 +352,12 @@ var Court = React.createClass({
 				<td>{this.props.crmid}</td>
 				<td>{Number(this.props.crmno)}</td>
 				<td>{this.props.courtdate}</td>	
-				<td>{this.props.courtime}</td>
+				<td>{this.props.courtime.insert(2,":")}</td>
 				<td>{this.props.courtnm}</td>
 				<td>{this.props.dpt}</td>
 				<td>{this.props.courtkd}</td>
 				<td>
+					<input type="radio" name="calRadios" value={this.props.num} onChange={this.props.onSelectRadio}/>
 				</td>
 				{/*
 				<td>{this.props.courtid}</td>
@@ -410,10 +425,18 @@ function getUniqueList(array, property){
 	return distinct;
 };
 
+//format:YYYY-MM-DD
 function ADtoROC(ADdate){
 	var ADdateStr = ADdate.toString().replace(/-/g,'');//刪除-
 	var ROCdate = parseInt(ADdateStr.substring(0,4))-1911 + ADdateStr.substring(4);//西元轉民國
-	return ROCdate;
+	return ROCdate;//format:yyyMMDD
+}
+//format:yyyMMDD
+function ROCtoAD(ROCdate){
+	var ADdateNum = Number(ROCdate)+19110000;
+	var ADdateStr = ADdateNum.toString();//變成YYYYMMDD
+	var ADdate = parseInt(ADdateNum/10000) + "-" + (parseInt(ADdateNum/100)%100) + "-"+ADdateNum%100;
+	return ADdate;//format:YYYY-MM-DD
 }
 
 String.prototype.insert = function (index, string) {
