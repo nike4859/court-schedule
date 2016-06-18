@@ -1,21 +1,24 @@
 var CourtBox = React.createClass({
 	getInitialState: function(){
 		return {
+			mode:'list',
 			data:[],
-			filterCourtNm: '',//法庭
-			filterDpt:'',
+			filterCourtNm: '',//篩選法庭
+			filterDpt:'',//篩選股別
 			courtNms:[],//法庭清單
-			dpts:[],
+			dpts:[],//股別清單
+			courtKds:[],//庭類清單
+			crtids:[],//法院清單
 			crtid:'TYD',//法院
+			sysArray:[],//庭別清單
 			sys:'H',//庭別
 			isloading: false,//是否讀取中
-			uiDisabled: false
+			uiDisabled: false,//UI是否啟用
+			radioGroup:null
 		};
 	},
 	//設定篩選參數
 	handleFilterInput: function(filterCourtNm, filterDpt){
-		
-		console.log(this.refs.title.textContent);
 		this.setState({
 			filterCourtNm: filterCourtNm,
 			filterDpt: filterDpt
@@ -25,22 +28,36 @@ var CourtBox = React.createClass({
 	handleQueryInput: function(crtid, sys){
 		this.setState({
 			crtid: crtid,
-			sys: sys,
+			sys: sys
 		});
 	},
 	handleRadioInput:function(e){
 		var row = this.state.data[e.target.value];//抓出被選擇的資料
 		//console.log(this.refs.title.textContent);
+		var crtName = this.state.crtids.getNameByIndex(this.state.crtid, "crtid", "crtname");//找法院
+		var sysName = this.state.sysArray.getNameByIndex(this.state.sys, "sys", "sysname");//找庭別
 		var caseName = row.crmyy + "年 " + row.crmid + "字 第" +Number(row.crmno) + "號";
-		this.refs.title.textContent=caseName;
+		this.refs.title.textContent=caseName;//設定標題
 		console.log(this.refs.title.textContent);
-		console.log(ROCtoAD(row.courtdate));
-		this.refs.start.textContent=ROCtoAD(row.courtdate) + " " + row.courtime.insert(2,":");
-		this.refs.end.textContent=ROCtoAD(row.courtdate) + "";
+		//console.log(ROCtoAD(row.courtdate));
+		this.refs.start.textContent=ROCtoAD(row.courtdate) + " " + row.courtime.insert(2,":");//設定行事曆開始時間 24H
+		this.refs.end.textContent=ROCtoAD(row.courtdate) + "";//不給結束的時間好像會自動加一個小時作為結束
+		//設定內容
 		this.refs.description.innerHTML = caseName + "<br>" + 
+										"法院:" + this.state.crtid + " " + crtName + "<br>" + 
+										"案件類別:" + sysName + "<br>" + 
 										"庭類:" + row.courtkd + "<br>" + 
 										"股別:" + row.dpt;
-		this.refs.location.textContent=row.courtnm;
+		this.refs.location.textContent=row.courtnm;//設定開庭地點
+		this.setState({
+			radioGroup:e.target
+		});
+	},
+	setMode:function(mode){
+		this.setState({
+			mode: mode
+		});
+		console.log(mode);
 	},
 	//查詢法院案件
 	queryCourts: function(crtid, sys, date1, date2){
@@ -52,7 +69,7 @@ var CourtBox = React.createClass({
 		this.setState({
 			crtid: crtid,
 			sys: sys,
-			filterCourtNm: ''
+			//filterCourtNm: ''
 		});
 	},
 	//讀取資料
@@ -68,7 +85,16 @@ var CourtBox = React.createClass({
 			cache: false,
 			success: function(data){
 				var array = data.query.results.DATA.rowid;
+				//處理回傳的資料
 				if(array){
+					//有可能只回傳一筆資料，需轉換成array避免後續無法使用array方法
+					if(!(array instanceof Array)){
+						console.log("Data not array.");
+						var tmp=[];
+						tmp.push(array);
+						array = tmp;
+						//console.log(array instanceof Array);
+					}
 					this.setState({data:array});
 					//console.log(data.query.results.DATA.rowid);
 					//console.log(data.query.results.DATA);
@@ -79,14 +105,50 @@ var CourtBox = React.createClass({
 					var nm = array.map(function(obj) { return obj.courtnm; });
 					nm = nm.filter(function(v,i) { return nm.indexOf(v) == i; });
 					*/
-					var nm = getUniqueList(array,"courtnm");//取出不重複法庭
-					nm.sort();
+					//console.time("concatenation");
+					// var nm = getUniqueList(array,"courtnm");//取出不重複法庭
+					// nm.sort();
+					//取出股別清單
 					var dpt = getUniqueList(array,"dpt");//取出不重複股別
 					dpt.sort();
-					this.setState({courtNms:nm, dpts:dpt});
+					var courtkd = getUniqueList(array,"courtkd");//取出不重複庭類
+					courtkd.sort();
+					//console.timeEnd("concatenation");
+					//取出法庭清單，並根據id排序
+					var nm = getNMList(array);
+					nm.sort(function(a, b) {
+					    var aid = Number(a.courtid);
+					    var bid = Number(b.courtid);
+					    if (aid > bid) {
+					        return 1;
+					    }
+					    if (aid < bid) {
+					        return -1;
+					    }
+					    // a must be equal to b
+					    return 0;
+					});
+					//console.log(nm);
+
+					/*放在同一個FUNCTION沒比較快*/
+					// console.time("concatenation");
+					// var properties = ["courtnm", "dpt"];
+					// var uniqueLists = getMultiUniqueList(array, properties);
+					// var nm = uniqueLists[0];
+					// var dpt = uniqueLists[1];
+					// nm.sort();
+					// dpt.sort();
+					// console.timeEnd("concatenation");
+
+					this.setState({courtNms:nm, dpts:dpt, courtKds:courtkd});
 					//console.timeEnd("concatenation");
 					//console.log(nm);
 					addScrollTop();
+					//取消月曆勾選
+					if(this.state.radioGroup){
+						this.state.radioGroup.checked = false;
+					}
+					//隱藏讀取符號
 					this.setState({isloading: false});
 				}else{
 					console.log("Courts is empty.");
@@ -103,21 +165,69 @@ var CourtBox = React.createClass({
 
 		});
 	},
+	//讀取法院資料
+	loadQueryData: function(){
+		var path = "./data/court-data.json";
+		$.ajax({
+		    url: path,
+		    dataType: 'json',
+		    success: function(data) {
+		    	//console.log(data);
+		    	if(data){
+		        	this.setState({crtids: data});
+				}
+		    }.bind(this),
+			error: function(xhr, status, err){
+				//console.log(xhr.responseText);
+				console.error(path, status, err.toString());
+			}.bind(this),
+		});
+		path = "./data/sys-data.json";
+		$.ajax({
+		    url: path,
+		    dataType: 'json',
+		    success: function(data) {
+		    	//console.log(data);
+		    	if(data){
+		        	this.setState({sysArray: data});
+				}
+		    }.bind(this),
+			error: function(xhr, status, err){
+				//console.log(xhr.responseText);
+				console.error(path, status, err.toString());
+			}.bind(this),
+		});
+	},
+
 	//componentDidMount is a method called automatically by React after a component is rendered for the first time. 
 	componentDidMount: function(){
 		//console.log('test');
 		//this.loadCourtsFromServer("TYD","H");
 		//setInterval(this.loadCommentsFromServer, this.props.pollInterval);
-		 addeventatc.refresh();//reload addevent
+		addeventatc.refresh();//reload addevent
+		this.loadQueryData();
 	},
 	render: function(){
+		var result = <CourtList data={this.state.data} filterCourtNm={this.state.filterCourtNm} 
+					filterDpt={this.state.filterDpt} onSelectRadio={this.handleRadioInput}/>;
+		if(this.state.mode==='Calendar'){
+			result = 'Calendar';
+		}else if(this.state.mode==='Contact'){
+			result = 'Contact';
+		}
 		return (
 			<div className="queryBox">
-				<QueryForm crtid={this.state.crtid} sys={this.state.sys} onQuery={this.handleQueryInput} submitQuery={this.queryCourts} uiDisabled={this.state.uiDisabled} />
-				<FilterForm courtNms={this.state.courtNms} dpts={this.state.dpts}  filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt} onFilter={this.handleFilterInput} uiDisabled={this.state.uiDisabled} />
+				<QueryNav onSelectMode={this.setMode}/>
+				<QueryForm crtids={this.state.crtids} crtid={this.state.crtid} 
+					sysArray={this.state.sysArray} sys={this.state.sys} 
+					onQuery={this.handleQueryInput} submitQuery={this.queryCourts} 
+					uiDisabled={this.state.uiDisabled} />
+				<FilterForm courtNms={this.state.courtNms} dpts={this.state.dpts}  
+					filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt} 
+					onFilter={this.handleFilterInput} uiDisabled={this.state.uiDisabled} />
 				{/*<LoadingComp isloading={this.state.isloading} />*/}
-				<CourtList data={this.state.data} filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt} onSelectRadio={this.handleRadioInput}/>
-				<span id="addeventatc-block" className="hidden btn btn-default">
+				{result}
+				<span id="addeventatc-block" className="btn btn-default">
 					<div title="Add to Calendar" className="addeventatc">
 					    <img src="image/calendar-clock32.png" alt="" />
 					    <span ref="start" className="start"></span>
@@ -133,6 +243,75 @@ var CourtBox = React.createClass({
 			</div>
 		);
 	}
+});
+
+/*
+選單參考
+http://stackoverflow.com/questions/22461129/switch-class-on-tabs-with-react-js
+*/
+var QueryNav = React.createClass({
+    getInitialState: function() {
+        return {
+            activeMenuItemUid: 'List'
+        };
+    },
+	getDefaultProps: function() {
+        return {
+            menuItems: [{
+                uid: 'List'
+            }, {
+                uid: 'Calendar'
+            }, {
+                uid: 'Contact'
+            }]
+        };
+    },
+    setActiveMenuItem: function(uid) {
+        this.setState({
+            activeMenuItemUid: uid
+        });
+        this.props.onSelectMode(uid);//傳到根結點
+    },
+
+	render: function() {
+		var menuItems = this.props.menuItems.map(function(menuItem) {
+			return(<MenuItem  key={menuItem.uid} active={(this.state.activeMenuItemUid === menuItem.uid)} 
+				onSelect={this.setActiveMenuItem} uid={menuItem.uid} />);        
+		},this);//如果要用到this記得要bind this
+        return (
+		    <nav className="navbar navbar-inverse navbar-fixed-top">
+		        <div className="container">
+		            <div className="navbar-header">
+		                <button type="button" className="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+		                    <span className="sr-only">Toggle navigation</span>
+		                    <span className="icon-bar"></span>
+		                    <span className="icon-bar"></span>
+		                    <span className="icon-bar"></span>
+		                </button>
+		                <a className="navbar-brand" href="#">台灣法院庭期查詢</a>
+		            </div>
+		            <div id="navbar" className="collapse navbar-collapse">
+		                <ul className="nav navbar-nav">
+		                    {menuItems}
+		                </ul>
+		            </div>
+		        </div>
+		    </nav>
+		);
+	}
+});
+
+var MenuItem = React.createClass({
+  handleClick: function(event) {
+    event.preventDefault();
+    this.props.onSelect(this.props.uid);
+  },
+  render: function() {
+    var className = this.props.active ? 'active' : null;//是否被選取
+    return (
+    	<li className={className}><a href={"#" + this.props.uid} onClick={this.handleClick}>{this.props.uid}</a></li>
+    );
+  }
 });
 
 var QueryForm = React.createClass({
@@ -173,6 +352,12 @@ var QueryForm = React.createClass({
 		if(!this.props.uiDisabled){
 			uiClass = "hidden";
 		}
+		var crtsNodes = this.props.crtids.map(function(crt){
+			return(<option key={crt.crtid+crt.crtname} value={crt.crtid}>{crt.crtname}</option>);
+		});
+		var sysArrayNodes = this.props.sysArray.map(function(sys){
+			return(<option key={sys.sys} value={sys.sys}>{sys.sysname}</option>);
+		});
 		return (
 			<div className="content">
 				<h4>查詢</h4>
@@ -180,18 +365,12 @@ var QueryForm = React.createClass({
 					<div className="form-group form-inline">
 						<div className="form-group">
 							<select ref="crtidInput" onChange={this.handleQueryChange} className="form-control" value={this.props.crtid}>
-								<option value="TPD">臺灣臺北地方法院</option>
-								<option value="TYD">臺灣桃園地方法院</option>
-								<option value="CLE">臺灣桃園地方法院中壢簡易庭</option>
-								<option value="TYE">臺灣桃園地方法院桃園簡易庭</option>			
+								{crtsNodes}		
 							</select>
 						</div>
 						<div className="form-group">
 							<select ref="sysInput" onChange={this.handleQueryChange} className="form-control" value={this.props.sys}>
-								<option value="V">民事</option>
-								<option value="H">刑事</option>
-								<option value="I">少年</option>
-								<option value="A">行政</option>			
+								{sysArrayNodes}			
 							</select>
 						</div>
 						<div className="form-group">
@@ -221,11 +400,12 @@ var FilterForm = React.createClass({
   	},
 	render: function() {
 		var courtNmNodes = this.props.courtNms.map(function(courtNm){
-			return(<option value={courtNm}>{courtNm}</option>)
+			return(<option key={courtNm.courtid} value={courtNm.courtnm}>{courtNm.courtnm}</option>);
 		});
 		var dptNodes = this.props.dpts.map(function(dpt){
-			return(<option value={dpt}>{dpt}</option>)
+			return(<option key={dpt} value={dpt}>{dpt}</option>);
 		});
+		//UI Disable
 		var opts={};
 		if (this.props.uiDisabled) {
             opts['disabled'] = 'disabled';
@@ -290,10 +470,12 @@ var CourtList = React.createClass({
 		},
 	render: function() {
 		//console.log('out:'+this.props.filterCourtNm);
-		var filterCourtNm = this.props.filterCourtNm.trim();
+		//var filterCourtNm = this.props.filterCourtNm.trim();
+		//console.log(this.props.data);
 		var courtNodes = this.props.data.filter(this.condition).map(this.mapFunction);
 		return (
 			<div className="content">
+				<div>共{courtNodes.length}件</div>
 				<table className="table table-bordered table-striped">
 					<thead>
 					<tr>
@@ -331,7 +513,7 @@ courtdate:"1050602"
 courtid:"0097"
 courtime:"0900"
 courtkd:"調解"
-courtnm:"刑事調解庭(一)"
+courtnm:"刑事調解庭(一)"  = courtid
 crmid:"訴"
 crmno:"000306"
 crmyy:"105"
@@ -404,15 +586,17 @@ function addScrollTop() {
                 top: 100
             }
         });
-        $('#addeventatc-block').removeClass('hidden').affix({
-            // how far to scroll down before link "slides" into view
-            offset: {
-                top: 100
-            }
-        });
+        /*直接讓他一直顯示，不隱藏*/
+        // $('#addeventatc-block').removeClass('hidden').affix({
+        //     // how far to scroll down before link "slides" into view
+        //     offset: {
+        //         top: 100
+        //     }
+        // });
     }
 };
 
+//取出不重複清單
 function getUniqueList(array, property){
 	var unique = {};
 	var distinct = [];
@@ -424,6 +608,40 @@ function getUniqueList(array, property){
 	}
 	return distinct;
 };
+//取法庭ID跟名稱
+function getNMList(array){
+	var unique = {};
+	var distinct = [];
+	for( var i in array ){
+	 if( typeof(unique[array[i]["courtnm"]]) == "undefined"){
+	  distinct.push({"courtid":array[i]["courtid"],"courtnm":array[i]["courtnm"]});
+	 }
+	 unique[array[i]["courtnm"]] = 0;
+	}
+	return distinct;
+};
+//取出不重複清單(多欄位)
+function getMultiUniqueList(array, properties) {
+    var unique = [];
+    var distinct = [];
+     for (var i in properties) {
+     	//console.log(i);
+     	unique[i]={};
+     	distinct[i]=[];
+     }
+    for (var i in array) {
+    	//console.log(i);
+        for (var j in properties) {
+        	var propName = properties[j];
+            if (typeof(unique[j][array[i][propName]]) == "undefined") {
+                distinct[j].push(array[i][propName]);
+            }
+            unique[j][array[i][propName]] = 0;
+        }
+    }
+    return distinct;
+};
+
 
 //format:YYYY-MM-DD
 function ADtoROC(ADdate){
@@ -438,6 +656,11 @@ function ROCtoAD(ROCdate){
 	var ADdate = parseInt(ADdateNum/10000) + "-" + (parseInt(ADdateNum/100)%100) + "-"+ADdateNum%100;
 	return ADdate;//format:YYYY-MM-DD
 }
+
+Array.prototype.getNameByIndex = function (value, findCol, returnCol){
+	var tmp = $.grep(this, function(e){ return e[findCol] == value;});
+	return tmp[0][returnCol];
+};
 
 String.prototype.insert = function (index, string) {
   if (index > 0)
