@@ -1,0 +1,26 @@
+[
+    {
+        "sys": "V",
+        "sysname": "民事"
+    },
+    {
+        "sys": "H",
+        "sysname": "刑事"
+    },
+    {
+        "sys": "I",
+        "sysname": "少年"
+    },
+    {
+        "sys": "A",
+        "sysname": "行政"
+    },
+    {
+        "sys": "D",
+        "sysname": "懲戒及職務"
+    },
+    {
+        "sys": "P",
+        "sysname": "公懲會"
+    }
+]
