@@ -30,6 +30,32 @@ body {
     color: white;
 }
 
+
+.navbar-custom {
+    background-image: radial-gradient(at top left, #cf8020 0%, #fce09a 100%);
+}
+.navbar-custom .navbar-nav > li > a {
+    color:#fff;
+}
+.navbar-custom .navbar-nav > .active > a, .navbar-nav > .active > a:hover, .navbar-nav > .active > a:focus {
+    color: #ffffff;
+    background-color:transparent;
+}
+.navbar-custom .navbar-nav > li > a:hover, .nav > li > a:focus {
+    text-decoration: none;
+    background-color: #33aa33;
+}
+.navbar-custom .navbar-brand {
+    color:#eeeeee;
+}
+.navbar-custom .navbar-toggle {
+    background-color:#eeeeee;
+}
+.navbar-custom .icon-bar {
+    background-color:#33aa33;
+}
+
+
 #top-link-block.affix-top {
     position: absolute;
     /* allows it to "slide" up into view */
@@ -66,11 +92,22 @@ body {
     /* padding from the left side of the window */
 }
 
+#addeventatc-block {
+    position: fixed;
+    /* keeps it on the bottom once in view */
+    
+    top: 58px;
+    /* height of link element */
+    
+    right: 10px;
+    /* padding from the left side of the window */
+}
+
 #addeventatc-block.affix {
     position: fixed;
     /* keeps it on the bottom once in view */
     
-    top: 18px;
+    top: 58px;
     /* height of link element */
     
     right: 10px;
