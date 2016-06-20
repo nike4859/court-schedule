@@ -95,10 +95,11 @@ var CourtBox = React.createClass({
 						array = tmp;
 						//console.log(array instanceof Array);
 					}
+					//增加moment時間屬性
 					array.map(function(court){
 						court.realDate = moment(ROCtoAD(court.courtdate) + " " + court.courtime.insert(2,":"),"YYYY-MM-DD HH:mm");
 					});
-					this.setState({data:array});
+					//this.setState({data:array});
 					//console.log(data.query.results.DATA.rowid);
 					//console.log(data.query.results.DATA);
 					
@@ -156,7 +157,7 @@ var CourtBox = React.createClass({
 						this.setState({filterCourtNm:""});//清空篩選法庭
 					}
 
-					this.setState({courtNms:nm, dpts:dpt, courtKds:courtkd});
+					this.setState({data:array, courtNms:nm, dpts:dpt, courtKds:courtkd});
 					//console.timeEnd("concatenation");
 					//console.log(nm);
 					addScrollTop();
@@ -165,8 +166,10 @@ var CourtBox = React.createClass({
 						this.state.radioGroup.checked = false;
 					}
 					//隱藏讀取符號
-					this.setState({isloading: false});
-					this.loadSessionState(crtid, sys);//讀取開庭狀態
+					//取消完讀取狀態，才開始擷取開庭狀態
+					this.setState({isloading: false}, function() {
+  						this.loadSessionState(crtid, sys);//讀取開庭狀態
+					});
 				}else{
 					console.log("Courts is empty.");
 					this.setState({data:[], courtNms:[], dpts:[]});//清空資料
