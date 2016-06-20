@@ -49,7 +49,7 @@ var CourtBox = React.createClass({
 										"案件類別:" + sysName + "<br>" + 
 										"庭類:" + row.courtkd + "<br>" + 
 										"股別:" + row.dpt;
-		this.refs.location.textContent=row.courtnm;//設定開庭地點
+		this.refs.location.textContent=crtName + " " + sysName + " " + row.courtnm;//設定開庭地點
 		this.setState({
 			radioGroup:e.target
 		});
@@ -294,6 +294,8 @@ var CourtBox = React.createClass({
 		return (
 			<div className="queryBox">
 				<QueryNav onSelectMode={this.setMode}/>
+				<br/>
+				<br/>
 				<QueryForm crtids={this.state.crtids} crtid={this.state.crtid} 
 					sysArray={this.state.sysArray} sys={this.state.sys} 
 					onQuery={this.handleQueryInput} submitQuery={this.queryCourts} 
@@ -440,7 +442,7 @@ var QueryForm = React.createClass({
 		});
 		return (
 			<div className="content">
-				<h4>查詢</h4>
+				<h4></h4>
 				<form onSubmit={this.handleSubmit}>
 					<div className="form-group form-inline">
 						<div className="form-group">
