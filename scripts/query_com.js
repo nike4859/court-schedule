@@ -604,7 +604,7 @@ var Court = React.createClass({
 		var status = "";
 		if(this.props.isToday){
 			if(typeof this.props.court.status != "undefined"){
-				status = <img src={"image/"+statusPic[this.props.court.status]} alt={this.props.court.status} class="" />;
+				status = <img src={"image/"+statusPic[this.props.court.status]} alt={this.props.court.status} title={this.props.court.status} class="" />;
 			}
 		}
 		return (
