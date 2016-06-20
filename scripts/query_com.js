@@ -31,6 +31,7 @@ var CourtBox = React.createClass({
 			sys: sys
 		});
 	},
+	//處理行事曆的內容
 	handleRadioInput:function(e){
 		var row = this.state.data[e.target.value];//抓出被選擇的資料
 		//console.log(this.refs.title.textContent);
@@ -63,14 +64,13 @@ var CourtBox = React.createClass({
 	queryCourts: function(crtid, sys, date1, date2){
 		//console.log(this.state.crtid+ this.state.sys);
 		//console.log(crtid+sys);
-		this.setState({uiDisabled:true});//停用按鈕
-		this.setState({isloading: true});
-		this.loadCourtsFromServer(crtid, sys,date1,date2);
 		this.setState({
+			uiDisabled:true, 
+			isloading: true,
 			crtid: crtid,
-			sys: sys,
-			//filterCourtNm: ''
-		});
+			sys: sys
+		});//停用按鈕，記錄法院及庭別
+		this.loadCourtsFromServer(crtid, sys,date1,date2);
 	},
 	//讀取資料
 	loadCourtsFromServer: function(crtid, sys,date1,date2){
@@ -95,10 +95,16 @@ var CourtBox = React.createClass({
 						array = tmp;
 						//console.log(array instanceof Array);
 					}
+					array.map(function(court){
+						court.realDate = moment(ROCtoAD(court.courtdate) + " " + court.courtime.insert(2,":"),"YYYY-MM-DD HH:mm");
+					});
 					this.setState({data:array});
 					//console.log(data.query.results.DATA.rowid);
 					//console.log(data.query.results.DATA);
 					
+
+					//console.log(array);
+
 					//console.time("concatenation");
 					/*
 					//此方法效能不佳
@@ -139,6 +145,16 @@ var CourtBox = React.createClass({
 					// nm.sort();
 					// dpt.sort();
 					// console.timeEnd("concatenation");
+					
+					//檢查是否股別存在於股別清單中
+					if(dpt.indexOf(this.state.filterDpt)<0){
+						this.setState({filterDpt:""});//清空篩選股別
+					}
+					//檢查是否法庭存在於法庭清單中
+					var nm_tmp = nm.map(function(tmp) {return tmp.courtnm;});
+					if(nm_tmp.indexOf(this.state.filterCourtNm)<0){
+						this.setState({filterCourtNm:""});//清空篩選法庭
+					}
 
 					this.setState({courtNms:nm, dpts:dpt, courtKds:courtkd});
 					//console.timeEnd("concatenation");
@@ -150,6 +166,7 @@ var CourtBox = React.createClass({
 					}
 					//隱藏讀取符號
 					this.setState({isloading: false});
+					this.loadSessionState(crtid, sys);//讀取開庭狀態
 				}else{
 					console.log("Courts is empty.");
 					this.setState({data:[], courtNms:[], dpts:[]});//清空資料
@@ -166,8 +183,8 @@ var CourtBox = React.createClass({
 		});
 	},
 	//讀取法院資料
-	loadQueryData: function(){
-		var path = "./data/court-data.json";
+	loadCourtFileData: function(){
+		var path = "./data/court-data.json";//法院資訊
 		$.ajax({
 		    url: path,
 		    dataType: 'json',
@@ -182,7 +199,7 @@ var CourtBox = React.createClass({
 				console.error(path, status, err.toString());
 			}.bind(this),
 		});
-		path = "./data/sys-data.json";
+		path = "./data/sys-data.json";//庭別
 		$.ajax({
 		    url: path,
 		    dataType: 'json',
@@ -199,19 +216,78 @@ var CourtBox = React.createClass({
 		});
 	},
 
+	loadSessionState: function(crtid, sys){
+		this.state.courtNms.map(function(courtNm){
+			var url =  getSessionStateUrl(crtid,sys, courtNm.courtid);
+			//var url = "https://graph.facebook.com/10150232496792613";
+			console.log(url);
+			$.ajax({
+				url: url,
+	    		crossDomain: true,
+	    		dataType: 'json',
+	    		//dataType: 'json',
+				cache: false,
+				success: function(data){
+					//console.log(data);
+					var count = data.query.count;
+					//console.log(data);
+					if(count>0){//當有回傳資料時
+						if(typeof data.query.results.json.json == "undefined"){//當資料只回傳一筆時
+							var array = data.query.results.json;
+							//轉成陣列
+							if(!(array instanceof Array)){
+								console.log("Data not array.");
+								var tmp=[];
+								tmp.push(array);
+								array = tmp;
+								//console.log(array instanceof Array);
+							}
+						}else{//當資料回傳多筆時
+							var array = data.query.results.json.json;
+						}
+						var courtData = this.state.data;
+						for(var i in array){
+							var status = array[i];
+							var statusIndex = status.crmyy+status.crmid+status.crmno+status.dudt+status.dutm+status.ducd;
+							for(var j in courtData){
+								var court = courtData[j];
+								var courtIndex = court.crmyy+court.crmid+court.crmno+court.courtdate+court.courtime+court.courtid;
+								if(statusIndex===courtIndex){
+									court.rstarttm = status.rstarttm;
+									court.rstoptm = status.rstoptm;
+									court.status = status.status;
+									break;
+								}
+							}
+						}
+						this.setState({data:courtData});//更新資料
+						//console.log(courtData);
+						// console.log(array);
+					}
+				}.bind(this),
+				error: function(xhr, status, err){
+					console.error(url, status, err.toString());
+				}.bind(this),
+				complete: function(){
+				}.bind(this),
+			});
+		}.bind(this));
+		
+	},
+
 	//componentDidMount is a method called automatically by React after a component is rendered for the first time. 
 	componentDidMount: function(){
 		//console.log('test');
 		//this.loadCourtsFromServer("TYD","H");
 		//setInterval(this.loadCommentsFromServer, this.props.pollInterval);
 		addeventatc.refresh();//reload addevent
-		this.loadQueryData();
+		this.loadCourtFileData();
 	},
 	render: function(){
 		var result = <CourtList data={this.state.data} filterCourtNm={this.state.filterCourtNm} 
 					filterDpt={this.state.filterDpt} onSelectRadio={this.handleRadioInput}/>;
 		if(this.state.mode==='Calendar'){
-			result = 'Calendar';
+			result = <Calerdar selected={moment().startOf("day")}/>;
 		}else if(this.state.mode==='Contact'){
 			result = 'Contact';
 		}
@@ -335,7 +411,11 @@ var QueryForm = React.createClass({
 	  	$(function() {
 	  		var today = new Date();
 	  		var days = 7;
-	  		var parameters = {dateFormat:"yy-mm-dd",showButtonPanel: true};
+	  		var parameters = {
+	  			dateFormat:"yy-mm-dd",
+	  			showButtonPanel: true,
+	  			firstDay: 0
+	  		};
 	    	$( "#datepicker1" ).datepicker(parameters).datepicker("setDate", today);
 	    	today.setDate(today.getDate() + days);//預設加上N天
 	    	$( "#datepicker2" ).datepicker(parameters).datepicker("setDate", today);
@@ -460,12 +540,9 @@ var CourtList = React.createClass({
 		return (!filterCourtNm || court.courtnm === filterCourtNm) && (!filterDpt || court.dpt === filterDpt);
 	},
 	mapFunction: function(court){
+			var today = new Date();
 			return(
-				<Court key={court.num} num={court.num} sys={court.sys} crmyy={court.crmyy}
-					crmid={court.crmid} crmno={court.crmno} courtdate={court.courtdate}
-					courtime={court.courtime} courtnm={court.courtnm} dpt={court.dpt}
-					courtkd={court.courtkd} courtid={court.courtid} crtid={court.crtid} onSelectRadio={this.props.onSelectRadio}>
-				</Court>
+				<Court key={court.num} court={court} isToday={court.realDate.isSame(today,"day")} onSelectRadio={this.props.onSelectRadio}></Court>
 			); 
 		},
 	render: function() {
@@ -524,22 +601,28 @@ sys:"H"
 */
 var Court = React.createClass({
 	render: function() {
+		var status = "";
+		if(this.props.isToday){
+			if(typeof this.props.court.status != "undefined"){
+				status = <img src={"image/"+statusPic[this.props.court.status]} alt={this.props.court.status} class="" />;
+			}
+		}
 		return (
 			<tr>
 				{/*
 				<td>{this.props.num}</td>
 				<td>{this.props.sys}</td>
 				*/}	
-				<td>{this.props.crmyy}</td>
-				<td>{this.props.crmid}</td>
-				<td>{Number(this.props.crmno)}</td>
-				<td>{this.props.courtdate}</td>	
-				<td>{this.props.courtime.insert(2,":")}</td>
-				<td>{this.props.courtnm}</td>
-				<td>{this.props.dpt}</td>
-				<td>{this.props.courtkd}</td>
+				<td>{this.props.court.crmyy}</td>
+				<td>{this.props.court.crmid}</td>
+				<td>{Number(this.props.court.crmno)}</td>
+				<td>{this.props.court.courtdate}</td>	
+				<td>{this.props.court.courtime.insert(2,":")}{status}</td>
+				<td>{this.props.court.courtnm}</td>
+				<td>{this.props.court.dpt}</td>
+				<td>{this.props.court.courtkd}</td>
 				<td>
-					<input type="radio" name="calRadios" value={this.props.num} onChange={this.props.onSelectRadio}/>
+					<input type="radio" name="calRadios" value={this.props.court.num} onChange={this.props.onSelectRadio}/>
 				</td>
 				{/*
 				<td>{this.props.courtid}</td>
@@ -548,6 +631,108 @@ var Court = React.createClass({
 			</tr>
 		);
 	}	
+});
+
+/*
+	ref:
+	http://chrisharrington.github.io/demos/react-controls/calendar.html
+*/
+var Calerdar = React.createClass({
+	getInitialState: function() {
+        return {
+            month: this.props.selected.clone(),
+            selected : this.props.selected
+        };
+    },
+
+    previous: function() {
+        var month = this.state.month;
+        month.add(-1, "M");
+        this.setState({ month: month });
+    },
+
+    next: function() {
+        var month = this.state.month;
+        month.add(1, "M");
+        this.setState({ month: month });
+    },
+
+    select: function(day) {
+        this.setState({selected:day.date});
+        this.forceUpdate();
+    },
+    renderWeeks: function() {
+        var weeks = [],
+            done = false,
+            date = this.state.month.clone().startOf("month").add("w" -1).day("Sunday"),
+            monthIndex = date.month(),
+            count = 0;
+        while (!done) {
+            weeks.push(<Week key={date.toString()} date={date.clone()} month={this.state.month} select={this.select} selected={this.state.selected} />);
+            date.add(1, "w");
+            done = count++ > 2 && monthIndex !== date.month();
+            monthIndex = date.month();
+        }
+
+        return weeks;
+    },
+    renderMonthLabel: function() {
+    	moment.locale('zh-tw');
+        return <span>{this.state.month.format("MMMM, YYYY")}</span>;
+    },
+	render: function() {
+    return (
+    	<div id="calendar">
+			<div className="header">
+                <i className="fa fa-angle-left" onClick={this.previous}></i>
+                {this.renderMonthLabel()}
+                <i className="fa fa-angle-right" onClick={this.next}></i>
+            </div>
+            <DayNames />
+            {this.renderWeeks()}
+    	</div>
+    	);
+	}
+});
+
+var DayNames = React.createClass({
+    render: function() {
+        return <div className="week names">
+            <span className="day">日</span>
+            <span className="day">一</span>
+            <span className="day">二</span>
+            <span className="day">三</span>
+            <span className="day">四</span>
+            <span className="day">五</span>
+            <span className="day">六</span>
+        </div>;
+    }
+});
+
+var Week = React.createClass({
+    render: function() {
+        var days = [],
+            date = this.props.date,
+            month = this.props.month;
+
+        for (var i = 0; i < 7; i++) {
+            var day = {
+                name: date.format("dd").substring(0, 1),
+                number: date.date(),
+                isCurrentMonth: date.month() === month.month(),
+                isToday: date.isSame(new Date(), "day"),
+                date: date
+            };
+            days.push(<span key={day.date.toString()} className={"day" + (day.isToday ? " today" : "") + (day.isCurrentMonth ? "" : " different-month") + (day.date.isSame(this.props.selected) ? " selected" : "")} onClick={this.props.select.bind(null, day)}>{day.number}</span>);
+            date = date.clone();
+            date.add(1, "d");
+
+        }
+
+        return <div className="week" key={days[0].toString()}>
+            {days}
+        </div>
+    }
 });
 
 //目前還沒用到
@@ -564,6 +749,20 @@ var LoadingComp = React.createClass({
 });
 
 //取得法院查詢的YQL URL
+/*
+courtdate:"1050602"
+courtid:"0097"
+courtime:"0900"
+courtkd:"調解"
+courtnm:"刑事調解庭(一)"  = courtid
+crmid:"訴"
+crmno:"000306"
+crmyy:"105"
+crtid:"TYD"
+dpt:"騰"
+num:"0"
+sys:"H"
+*/
 function getCourtUrl(crtid, sys, dateBegin, dateEnd){
 	if(!dateBegin || !dateEnd){
 		dateBegin = '';
@@ -572,7 +771,41 @@ function getCourtUrl(crtid, sys, dateBegin, dateEnd){
 	if(!crtid || !sys){//empty
 		return;
 	}
-	return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_COURTDATA.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26date1%3D"+dateBegin+"%26date2%3D"+dateEnd+"'&format=json&callback=";
+	return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_COURTDATA.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26date1%3D"+dateBegin+"%26date2%3D"+dateEnd+"%26timstamp%3D"+ (new Date()).getTime() +"'&format=json&callback=";
+};
+
+//取得庭期狀態查詢的URL
+/*
+    "crmid": "易",
+    "crmkd": "H",
+    "crmno": "000366",
+    "crmyy": "105",
+    "crtcd": "TYD",
+    "crtnm": "臺灣桃園地方法院",
+    "dpt": "約",
+    "ducd": "0006",
+    "dudt": "1050620",
+    "dukd": "準備程序",
+    "dunm": "刑事第六法庭",
+    "dutm": "0930",
+    "issendtencing": "",
+    "rstarttm": "",
+    "rstoptm": "",
+    "status": "待開庭"
+    待開庭
+    開完庭
+	開庭中
+	下一庭
+	未開庭
+*/
+/*timestamp參數是為了避免YQL使用cache輸出舊的資料*/
+function getSessionStateUrl(crtid, sys, courtid){
+	if(!crtid || !sys || !courtid){//empty
+		return;
+	}
+	//return "http://210.69.124.207/abbs/wkw/WHD_PDA_GET_CTSTATE.jsp?crtid="+crtid+"&sys="+sys+"&ducd="+courtid;
+	return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20json%20where%20url%3D%22http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_CTSTATE.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26ducd%3D"+courtid+"%26timstamp%3D"+ (new Date()).getTime() +"%22&format=json&callback=";
+	//return "https://jsonp.afeld.me/?url=http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_CTSTATE.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26ducd%3D"+courtid;
 };
 
 //處理TOP按鈕，等資料載入完再呼叫
@@ -597,30 +830,39 @@ function addScrollTop() {
 };
 
 //取出不重複清單
-function getUniqueList(array, property){
-	var unique = {};
-	var distinct = [];
-	for( var i in array ){
-	 if( typeof(unique[array[i][property]]) == "undefined"){
-	  distinct.push(array[i][property]);
-	 }
-	 unique[array[i][property]] = 0;
-	}
-	return distinct;
+function getUniqueList(array, property) {
+    var unique = {};
+    var distinct = [];
+    for (var i in array) {
+        if (typeof(unique[array[i][property]]) == "undefined") {
+        	if( array.hasOwnProperty(i) ){
+            	distinct.push(array[i][property]);
+        	}
+        }
+        unique[array[i][property]] = 0;
+    }
+    return distinct;
 };
+
 //取法庭ID跟名稱
-function getNMList(array){
-	var unique = {};
-	var distinct = [];
-	for( var i in array ){
-	 if( typeof(unique[array[i]["courtnm"]]) == "undefined"){
-	  distinct.push({"courtid":array[i]["courtid"],"courtnm":array[i]["courtnm"]});
-	 }
-	 unique[array[i]["courtnm"]] = 0;
-	}
-	return distinct;
+function getNMList(array) {
+    var unique = {};
+    var distinct = [];
+    for (var i in array) {
+        if (typeof(unique[array[i]["courtnm"]]) == "undefined") {
+        	if( array.hasOwnProperty(i) ){
+	            distinct.push({
+	                "courtid": array[i]["courtid"],
+	                "courtnm": array[i]["courtnm"]
+	            });
+	        }
+        }
+        unique[array[i]["courtnm"]] = 0;
+    }
+    return distinct;
 };
-//取出不重複清單(多欄位)
+
+//取出不重複清單(多欄位)，效能較差不建議使用
 function getMultiUniqueList(array, properties) {
     var unique = [];
     var distinct = [];
@@ -656,7 +898,12 @@ function ROCtoAD(ROCdate){
 	var ADdate = parseInt(ADdateNum/10000) + "-" + (parseInt(ADdateNum/100)%100) + "-"+ADdateNum%100;
 	return ADdate;//format:YYYY-MM-DD
 }
-
+/*
+	Array使用了property會造成資料多增加一筆，儲存內容為此function
+	可用 array.hasOwnProperty(i) 檢測該索引是否為原形本身就有的屬性。
+	Ref:
+	http://stackoverflow.com/questions/1107681/javascript-hiding-prototype-methods-in-for-loop
+*/
 Array.prototype.getNameByIndex = function (value, findCol, returnCol){
 	var tmp = $.grep(this, function(e){ return e[findCol] == value;});
 	return tmp[0][returnCol];
@@ -667,6 +914,15 @@ String.prototype.insert = function (index, string) {
     return this.substring(0, index) + string + this.substring(index, this.length);
   else
     return string + this;
+};
+
+var statusPic = {
+	"待開庭":"status-offline.png",
+	"開完庭":"status.png",
+	"開庭中":"status-busy.png",
+	"下一庭":"status-offline.png",
+	"未開庭":"status-offline.png",
+	"未聽判":"status-offline.png"
 };
 
 /*
