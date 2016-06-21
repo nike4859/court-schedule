@@ -290,7 +290,8 @@ var CourtBox = React.createClass({
 		var result = <CourtList data={this.state.data} filterCourtNm={this.state.filterCourtNm} 
 					filterDpt={this.state.filterDpt} onSelectRadio={this.handleRadioInput}/>;
 		if(this.state.mode==='Calendar'){
-			result = <Calerdar selected={moment().startOf("day")}/>;
+			result = <Calerdar selected={moment().startOf("day")} data={this.state.data} filterCourtNm={this.state.filterCourtNm} 
+					filterDpt={this.state.filterDpt} />;
 		}else if(this.state.mode==='Contact'){
 			result = 'Contact';
 		}
@@ -537,12 +538,16 @@ var FilterForm = React.createClass({
 	}
 });
 
+
 //案件清單
 var CourtList = React.createClass({
 	condition: function(court){
+		return isfilterMatch(court, this.props.filterCourtNm.trim(), this.props.filterDpt.trim());
+		/*
 		var filterCourtNm = this.props.filterCourtNm.trim();
 		var filterDpt = this.props.filterDpt.trim();
 		return (!filterCourtNm || court.courtnm === filterCourtNm) && (!filterDpt || court.dpt === filterDpt);
+		*/
 	},
 	mapFunction: function(court){
 			var today = new Date();
@@ -673,7 +678,9 @@ var Calerdar = React.createClass({
             monthIndex = date.month(),
             count = 0;
         while (!done) {
-            weeks.push(<Week key={date.toString()} date={date.clone()} month={this.state.month} select={this.select} selected={this.state.selected} />);
+            weeks.push(<Week key={date.toString()} date={date.clone()} month={this.state.month} select={this.select} 
+            	selected={this.state.selected} data={this.props.data} filterCourtNm={this.props.filterCourtNm}  
+            	filterDpt={this.props.filterDpt} />);
             date.add(1, "w");
             done = count++ > 2 && monthIndex !== date.month();
             monthIndex = date.month();
@@ -693,8 +700,12 @@ var Calerdar = React.createClass({
                 {this.renderMonthLabel()}
                 <i className="fa fa-angle-right" onClick={this.next}></i>
             </div>
-            <DayNames />
+            <table>
+            <thead><DayNames /></thead>
+      		<tbody>
             {this.renderWeeks()}
+            </tbody>
+            </table>
     	</div>
     	);
 	}
@@ -702,15 +713,15 @@ var Calerdar = React.createClass({
 
 var DayNames = React.createClass({
     render: function() {
-        return <div className="week names">
-            <span className="day">日</span>
-            <span className="day">一</span>
-            <span className="day">二</span>
-            <span className="day">三</span>
-            <span className="day">四</span>
-            <span className="day">五</span>
-            <span className="day">六</span>
-        </div>;
+        return <tr className="week names">
+            <td className="day">日</td>
+            <td className="day">一</td>
+            <td className="day">二</td>
+            <td className="day">三</td>
+            <td className="day">四</td>
+            <td className="day">五</td>
+            <td className="day">六</td>
+        </tr>;
     }
 });
 
@@ -728,18 +739,35 @@ var Week = React.createClass({
                 isToday: date.isSame(new Date(), "day"),
                 date: date
             };
-            days.push(<span key={day.date.toString()} className={"day" + (day.isToday ? " today" : "") + (day.isCurrentMonth ? "" : " different-month") + (day.date.isSame(this.props.selected) ? " selected" : "")} onClick={this.props.select.bind(null, day)}>{day.number}</span>);
+            days.push(<td key={day.date.toString()} className={"day" + (day.isToday ? " today" : "") + (day.isCurrentMonth ? "" : " different-month") + (day.date.isSame(this.props.selected) ? " selected" : "")} 
+            	onClick={this.props.select.bind(null, day)}>{day.number}
+            	<Event data={this.props.data} day={day} filterCourtNm={this.props.filterCourtNm} filterDpt={this.props.filterDpt}/>
+            	</td>);
             date = date.clone();
             date.add(1, "d");
 
         }
 
-        return <div className="week" key={days[0].toString()}>
+        return <tr className="week" key={days[0].toString()}>
             {days}
-        </div>
+        </tr>
     }
-});
-
+}); 
+var Event = React.createClass({
+	condition: function(court){
+		return isfilterMatch(court, this.props.filterCourtNm.trim(), this.props.filterDpt.trim());
+	},
+	render: function() {
+		var day = this.props.day;
+		var events=$.grep(this.props.data, function(court){ return court.realDate.isSame(day.date, "day");});
+		var eventNodes = events.filter(this.condition).map(function(court){
+							return <div className="event">{court.courtime.insert(2,":") + " " + Number(court.courtid) + " " + 
+							court.dpt + "股 " + court.crmyy  + "" + court.crmid  + "" + Number(court.crmno) + " " + 
+							court.courtkd}</div>
+						});
+        return <div>{eventNodes}</div>
+    }
+});     	
 //目前還沒用到
 var LoadingComp = React.createClass({
 	render: function() {
@@ -812,6 +840,14 @@ function getSessionStateUrl(crtid, sys, courtid){
 	return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20json%20where%20url%3D%22http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_CTSTATE.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26ducd%3D"+courtid+"%26timstamp%3D"+ (new Date()).getTime() +"%22&format=json&callback=";
 	//return "https://jsonp.afeld.me/?url=http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_CTSTATE.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26ducd%3D"+courtid;
 };
+
+function isfilterMatch(court, filterCourtNm, filterDpt){
+		/*
+		var filterCourtNm = this.props.filterCourtNm.trim();
+		var filterDpt = this.props.filterDpt.trim();
+		*/
+		return (!filterCourtNm || court.courtnm === filterCourtNm) && (!filterDpt || court.dpt === filterDpt);
+}
 
 //處理TOP按鈕，等資料載入完再呼叫
 function addScrollTop() {

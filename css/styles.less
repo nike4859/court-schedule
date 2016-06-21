@@ -71,31 +71,39 @@
             color:inherit;
         }
     }
-    >div.week {
-        float:left;
+    table{
+        width:100%;
+        border-collapse: collapse;
+    }
+    tr.week {
+        /*float:left;*/
         width:100%;
         border-top:solid 1px @border-colour;
-
+        /*
         &:first-child {
             border-top:none;
         }
-
-        >span.day {
-            float:left;
-            width:100%/7;
+        */
+        td.day {
+            /*border:solid 1px @border-colour;*/
+            /*float:left;*/
+            /*width:100%/7;*/
             .border-box;
             border-left:solid 1px @border-colour;
-            font-size:0.75em;
-            text-align:center;
-            .vertical-centre(30px);
+            /*font-size:0.75em;*/
+            padding: 3px;
+            /*text-align:center;*/
+            /*.vertical-centre(30px);*//*此屬性造成多行資料消失*/
             background:white;
             cursor:pointer;
             color:black;
-
+            height: 0px;/*使所有td都一樣高*/
+            vertical-align:top;
+            /*
             &:first-child {
                 border-left:none;
             }
-
+            */
             &.today {
                 background:#E3F2FF;
             }
@@ -108,9 +116,21 @@
                 background:@secondary-colour;
                 color:white;
             }
+
+            div.event{
+                height: 100%;
+                border-radius: 3px 3px 3px 3px;
+                -moz-border-radius: 3px 3px 3px 3px;
+                -webkit-border-radius: 3px 3px 3px 3px;
+                border: 1px solid #A9ABFE;
+                color: #777777;
+                background-color: #E3E3FF;
+                overflow: hidden;
+            }
         }
 
-        &.names>span {
+        &.names>td {
+            text-align:center;
             color:@secondary-colour;
             font-weight:bold;
         }
