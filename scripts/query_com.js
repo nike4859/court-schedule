@@ -305,7 +305,7 @@ var CourtBox = React.createClass({
 			result = <Calerdar selected={moment().startOf("day")} data={this.state.data.filter(this.condition)} filterCourtNm={this.state.filterCourtNm} 
 					filterDpt={this.state.filterDpt} />;
 		}else if(this.state.mode==='Contact'){
-			result = 'Contact';
+			result = <Contact />;
 		}
 		return (
 			<div className="queryBox">
@@ -779,7 +779,26 @@ var Event = React.createClass({
 						});
         return <div>{eventNodes}</div>
     }
-});     	
+});  
+
+var Contact  = React.createClass({
+	render: function() {
+		return (
+			<div className="license">
+				<a rel = "license" href = "http://creativecommons.org/licenses/by-nc/4.0/">
+				<img alt = "Creative Commons License" src = "https://i.creativecommons.org/l/by-nc/4.0/88x31.png" />
+				</a><br />
+				<span property = "dct:title"> Taiwan Court Session Management System </span> by 
+				<span property="cc:attributionName"> Morris Yang </span> <br />
+				Docs is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">
+				Creative Commons Attribution-NonCommercial 4.0 International License</a>.<br />
+				Code is licensed under a <a rel="license" href="https://opensource.org/licenses/MIT">the MIT license</a>.
+			</div>
+		);
+	}
+});
+
+
 //目前還沒用到
 var LoadingComp = React.createClass({
 	render: function() {

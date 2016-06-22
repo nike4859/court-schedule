@@ -113,3 +113,7 @@ body {
     right: 10px;
     /* padding from the left side of the window */
 }
+
+.license{
+    text-align: center;
+}
