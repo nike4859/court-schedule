@@ -220,7 +220,10 @@ var CourtBox = React.createClass({
 	},
 
 	loadSessionState: function(crtid, sys){
-		this.state.courtNms.map(function(courtNm){
+		var isJobsDone = Array.apply(null, {length: this.state.courtNms.length}).map(function() { return false; });
+		//console.log(isJobsDone);
+		var courtData = this.state.data;
+		this.state.courtNms.map(function(courtNm, courtNmIndex){
 			var url =  getSessionStateUrl(crtid,sys, courtNm.courtid);
 			//var url = "https://graph.facebook.com/10150232496792613";
 			console.log(url);
@@ -248,11 +251,12 @@ var CourtBox = React.createClass({
 						}else{//當資料回傳多筆時
 							var array = data.query.results.json.json;
 						}
-						var courtData = this.state.data;
-						for(var i in array){
+						//組裝資料
+						//var courtData = this.state.data;
+						for(var i in array){//庭期進度
 							var status = array[i];
 							var statusIndex = status.crmyy+status.crmid+status.crmno+status.dudt+status.dutm+status.ducd;
-							for(var j in courtData){
+							for(var j in courtData){//庭期表
 								var court = courtData[j];
 								var courtIndex = court.crmyy+court.crmid+court.crmno+court.courtdate+court.courtime+court.courtid;
 								if(statusIndex===courtIndex){
@@ -263,7 +267,7 @@ var CourtBox = React.createClass({
 								}
 							}
 						}
-						this.setState({data:courtData});//更新資料
+						//this.setState({data:courtData});//更新資料
 						//console.log(courtData);
 						// console.log(array);
 					}
@@ -272,12 +276,20 @@ var CourtBox = React.createClass({
 					console.error(url, status, err.toString());
 				}.bind(this),
 				complete: function(){
+					isJobsDone[courtNmIndex] = true;
+					//console.log(isJobsDone);
+					if(isJobsDone.indexOf(false)<0){
+						console.log("All status jobs done.");
+						this.setState({data:courtData});//統一一次更新資料，降低更新頻率
+					}
 				}.bind(this),
 			});
 		}.bind(this));
 		
 	},
-
+	condition: function(court){
+		return isfilterMatch(court, this.state.filterCourtNm.trim(), this.state.filterDpt.trim());
+	},
 	//componentDidMount is a method called automatically by React after a component is rendered for the first time. 
 	componentDidMount: function(){
 		//console.log('test');
@@ -287,10 +299,10 @@ var CourtBox = React.createClass({
 		this.loadCourtFileData();
 	},
 	render: function(){
-		var result = <CourtList data={this.state.data} filterCourtNm={this.state.filterCourtNm} 
+		var result = <CourtList data={this.state.data.filter(this.condition)} filterCourtNm={this.state.filterCourtNm} 
 					filterDpt={this.state.filterDpt} onSelectRadio={this.handleRadioInput}/>;
 		if(this.state.mode==='Calendar'){
-			result = <Calerdar selected={moment().startOf("day")} data={this.state.data} filterCourtNm={this.state.filterCourtNm} 
+			result = <Calerdar selected={moment().startOf("day")} data={this.state.data.filter(this.condition)} filterCourtNm={this.state.filterCourtNm} 
 					filterDpt={this.state.filterDpt} />;
 		}else if(this.state.mode==='Contact'){
 			result = 'Contact';
@@ -559,7 +571,7 @@ var CourtList = React.createClass({
 		//console.log('out:'+this.props.filterCourtNm);
 		//var filterCourtNm = this.props.filterCourtNm.trim();
 		//console.log(this.props.data);
-		var courtNodes = this.props.data.filter(this.condition).map(this.mapFunction);
+		var courtNodes = this.props.data.map(this.mapFunction);
 		return (
 			<div className="content">
 				<div>共{courtNodes.length}件</div>
@@ -741,7 +753,7 @@ var Week = React.createClass({
             };
             days.push(<td key={day.date.toString()} className={"day" + (day.isToday ? " today" : "") + (day.isCurrentMonth ? "" : " different-month") + (day.date.isSame(this.props.selected) ? " selected" : "")} 
             	onClick={this.props.select.bind(null, day)}>{day.number}
-            	<Event data={this.props.data} day={day} filterCourtNm={this.props.filterCourtNm} filterDpt={this.props.filterDpt}/>
+            	<Event key={day.date.toString()} data={this.props.data} day={day} filterCourtNm={this.props.filterCourtNm} filterDpt={this.props.filterDpt}/>
             	</td>);
             date = date.clone();
             date.add(1, "d");
@@ -760,8 +772,8 @@ var Event = React.createClass({
 	render: function() {
 		var day = this.props.day;
 		var events=$.grep(this.props.data, function(court){ return court.realDate.isSame(day.date, "day");});
-		var eventNodes = events.filter(this.condition).map(function(court){
-							return <div className="event">{court.courtime.insert(2,":") + " " + Number(court.courtid) + " " + 
+		var eventNodes = events.map(function(court){
+							return <div key={court.num} className="event">{court.courtime.insert(2,":") + " " + Number(court.courtid) + " " + 
 							court.dpt + "股 " + court.crmyy  + "" + court.crmid  + "" + Number(court.crmno) + " " + 
 							court.courtkd}</div>
 						});
