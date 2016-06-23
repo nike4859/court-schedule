@@ -688,11 +688,15 @@ var Calerdar = React.createClass({
             done = false,
             date = this.state.month.clone().startOf("month").add("w" -1).day("Sunday"),
             monthIndex = date.month(),
-            count = 0;
+            count = 0,
+            AMCut = 1300;
         while (!done) {
-            weeks.push(<Week key={date.toString()} date={date.clone()} month={this.state.month} select={this.select} 
-            	selected={this.state.selected} data={this.props.data} filterCourtNm={this.props.filterCourtNm}  
+            weeks.push(<Week key={date.toString()+"_AM"} isAM={true} date={date.clone()} month={this.state.month} select={this.select} 
+            	selected={this.state.selected} data={this.props.data.filter(function(court) { return Number(court.courtime)<AMCut; })} filterCourtNm={this.props.filterCourtNm}  
             	filterDpt={this.props.filterDpt} />);
+            weeks.push(<Week key={date.toString()+"_PM"} isAM={false} date={date.clone()} month={this.state.month} select={this.select} 
+            	selected={this.state.selected} data={this.props.data.filter(function(court) { return Number(court.courtime)>AMCut; })} filterCourtNm={this.props.filterCourtNm}  
+            	filterDpt={this.props.filterDpt} />);            
             date.add(1, "w");
             done = count++ > 2 && monthIndex !== date.month();
             monthIndex = date.month();
@@ -752,15 +756,15 @@ var Week = React.createClass({
                 date: date
             };
             days.push(<td key={day.date.toString()} className={"day" + (day.isToday ? " today" : "") + (day.isCurrentMonth ? "" : " different-month") + (day.date.isSame(this.props.selected) ? " selected" : "")} 
-            	onClick={this.props.select.bind(null, day)}>{day.number}
-            	<Event key={day.date.toString()} data={this.props.data} day={day} filterCourtNm={this.props.filterCourtNm} filterDpt={this.props.filterDpt}/>
+            	onClick={this.props.select.bind(null, day)}>{(this.props.isAM ? day.number : "")}
+            	<Event key={day.date.toString()} data={this.props.data} day={day} filterCourtNm={this.props.filterCourtNm} filterDpt={this.props.filterDpt} isAM={this.props.isAM} />
             	</td>);
             date = date.clone();
             date.add(1, "d");
 
         }
 
-        return <tr className="week" key={days[0].toString()}>
+        return <tr className={"week" + (!this.props.isAM ? " PM" : "")} key={days[0].toString()}>
             {days}
         </tr>
     }
@@ -773,10 +777,10 @@ var Event = React.createClass({
 		var day = this.props.day;
 		var events=$.grep(this.props.data, function(court){ return court.realDate.isSame(day.date, "day");});
 		var eventNodes = events.map(function(court){
-							return <div key={court.num} className="event">{court.courtime.insert(2,":") + " " + Number(court.courtid) + " " + 
+							return <div key={court.num} className={"event"+ (!this.props.isAM ? " PM" : "")}>{court.courtime.insert(2,":") + " " + Number(court.courtid) + " " + 
 							court.dpt + "股 " + court.crmyy  + "" + court.crmid  + "" + Number(court.crmno) + " " + 
 							court.courtkd}</div>
-						});
+						}.bind(this));
         return <div>{eventNodes}</div>
     }
 });  

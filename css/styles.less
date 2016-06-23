@@ -79,11 +79,16 @@
         /*float:left;*/
         width:100%;
         border-top:solid 1px @border-colour;
+
+        &.PM {
+            border-top:none;
+        }
         /*
         &:first-child {
             border-top:none;
         }
         */
+
         td.day {
             /*border:solid 1px @border-colour;*/
             /*float:left;*/
@@ -105,7 +110,7 @@
             }
             */
             &.today {
-                background:#E3F2FF;
+                background:#EAEAEA;
             }
 
             &.different-month {
@@ -113,8 +118,8 @@
             }
 
             &.selected {
-                background:@secondary-colour;
-                color:white;
+                background:#FFEEEE;
+                /*color:white;*/
             }
 
             div.event{
@@ -126,6 +131,10 @@
                 color: #777777;
                 background-color: #E3E3FF;
                 overflow: hidden;
+                &.PM {
+                    border: 1px solid #A9FEA9;
+                    background-color: #E5FFE5;
+                }
             }
         }
 
