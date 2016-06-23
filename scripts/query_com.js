@@ -639,7 +639,7 @@ var Court = React.createClass({
 				<td>{this.props.court.crmid}</td>
 				<td>{Number(this.props.court.crmno)}</td>
 				<td>{this.props.court.courtdate}</td>	
-				<td>{this.props.court.courtime.insert(2,":")}{status}</td>
+				<td>{this.props.court.courtime.insert(2,":")}<Status isToday={this.props.isToday} court={this.props.court}/></td>
 				<td>{this.props.court.courtnm}</td>
 				<td>{this.props.court.dpt}</td>
 				<td>{this.props.court.courtkd}</td>
@@ -654,6 +654,21 @@ var Court = React.createClass({
 		);
 	}	
 });
+
+var Status = React.createClass({
+	render() {
+		var status = null;
+		if(this.props.isToday){
+			if(typeof this.props.court.status != "undefined"){
+				status = <img src={"image/"+statusPic[this.props.court.status]} alt={this.props.court.status} title={this.props.court.status} clasName="" />;
+			}
+		}
+		return (
+			 status
+		);
+	}
+});
+
 
 /*
 	ref:
@@ -689,7 +704,7 @@ var Calerdar = React.createClass({
             date = this.state.month.clone().startOf("month").add("w" -1).day("Sunday"),
             monthIndex = date.month(),
             count = 0,
-            AMCut = 1300;
+            AMCut = 1300;//上下午時段切割點
         while (!done) {
             weeks.push(<Week key={date.toString()+"_AM"} isAM={true} date={date.clone()} month={this.state.month} select={this.select} 
             	selected={this.state.selected} data={this.props.data.filter(function(court) { return Number(court.courtime)<AMCut; })} filterCourtNm={this.props.filterCourtNm}  
@@ -776,10 +791,12 @@ var Event = React.createClass({
 	render: function() {
 		var day = this.props.day;
 		var events=$.grep(this.props.data, function(court){ return court.realDate.isSame(day.date, "day");});
+		var today = new Date();
+		var isToday = this.props.day.isToday;
 		var eventNodes = events.map(function(court){
 							return <div key={court.num} className={"event"+ (!this.props.isAM ? " PM" : "")}>{court.courtime.insert(2,":") + " " + Number(court.courtid) + " " + 
 							court.dpt + "股 " + court.crmyy  + "" + court.crmid  + "" + Number(court.crmno) + " " + 
-							court.courtkd}</div>
+							court.courtkd}<Status isToday={isToday} court={court}/></div>
 						}.bind(this));
         return <div>{eventNodes}</div>
     }
