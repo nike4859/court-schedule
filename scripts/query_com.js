@@ -1,7 +1,7 @@
 var CourtBox = React.createClass({
 	getInitialState: function(){
 		return {
-			mode:'list',
+			mode:'List',
 			data:[],
 			filterCourtNm: '',//篩選法庭
 			filterDpt:'',//篩選股別
@@ -321,7 +321,7 @@ var CourtBox = React.createClass({
 					onFilter={this.handleFilterInput} uiDisabled={this.state.uiDisabled} />
 				{/*<LoadingComp isloading={this.state.isloading} />*/}
 				{result}
-				<span id="addeventatc-block" className={"btn btn-default" + (this.state.mode==='Calendar' ? " hidden" : "")}>
+				<span id="addeventatc-block" className={"btn btn-default" + (this.state.mode!='List' ? " hidden" : "")}>
 					<div title="Add to Calendar" className="addeventatc">
 					    <img src="image/calendar-clock32.png" alt="" />
 					    <span ref="start" className="start"></span>
@@ -813,7 +813,8 @@ var Contact  = React.createClass({
 				<span property="cc:attributionName"> Morris Yang </span> <br />
 				Docs is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">
 				Creative Commons Attribution-NonCommercial 4.0 International License</a>.<br />
-				Code is licensed under a <a rel="license" href="https://opensource.org/licenses/MIT">the MIT license</a>.
+				Code is licensed under a <a rel="license" href="https://opensource.org/licenses/MIT">the MIT license</a>.<br />
+				Taiwan Taoyuan District Court
 			</div>
 		);
 	}
