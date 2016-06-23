@@ -321,7 +321,7 @@ var CourtBox = React.createClass({
 					onFilter={this.handleFilterInput} uiDisabled={this.state.uiDisabled} />
 				{/*<LoadingComp isloading={this.state.isloading} />*/}
 				{result}
-				<span id="addeventatc-block" className="btn btn-default">
+				<span id="addeventatc-block" className={"btn btn-default" + (this.state.mode==='Calendar' ? " hidden" : "")}>
 					<div title="Add to Calendar" className="addeventatc">
 					    <img src="image/calendar-clock32.png" alt="" />
 					    <span ref="start" className="start"></span>
