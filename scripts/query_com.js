@@ -5,6 +5,7 @@ var CourtBox = React.createClass({
 			data:[],
 			filterCourtNm: '',//篩選法庭
 			filterDpt:'',//篩選股別
+			filterCourtKd:[],//篩選庭類
 			courtNms:[],//法庭清單
 			dpts:[],//股別清單
 			courtKds:[],//庭類清單
@@ -22,6 +23,14 @@ var CourtBox = React.createClass({
 		this.setState({
 			filterCourtNm: filterCourtNm,
 			filterDpt: filterDpt
+		});
+	},
+	onCourtKDClick: function(checkbox){
+		var tmp = this.state.filterCourtKd;
+		//console.log(tmp);
+		tmp[checkbox.value] = !tmp[checkbox.value];
+		this.setState({
+			filterCourtKd: tmp
 		});
 	},
 	//設定查詢參數
@@ -120,6 +129,9 @@ var CourtBox = React.createClass({
 					dpt.sort();
 					var courtkd = getUniqueList(array,"courtkd");//取出不重複庭類
 					courtkd.sort();
+					var courtkdSelect=[];
+					courtkd.map(function(kd) { courtkdSelect[kd]=true; });//初始化庭別選擇
+					//console.log(courtkdSelect);
 					//console.timeEnd("concatenation");
 					//取出法庭清單，並根據id排序
 					var nm = getNMList(array);
@@ -157,7 +169,7 @@ var CourtBox = React.createClass({
 						this.setState({filterCourtNm:""});//清空篩選法庭
 					}
 
-					this.setState({data:array, courtNms:nm, dpts:dpt, courtKds:courtkd});
+					this.setState({data:array, courtNms:nm, dpts:dpt, courtKds:courtkd, filterCourtKd:courtkdSelect});
 					//console.timeEnd("concatenation");
 					//console.log(nm);
 					addScrollTop();
@@ -287,8 +299,9 @@ var CourtBox = React.createClass({
 		}.bind(this));
 		
 	},
+	//資料條件篩選
 	condition: function(court){
-		return isfilterMatch(court, this.state.filterCourtNm.trim(), this.state.filterDpt.trim());
+		return isfilterMatch(court, this.state.filterCourtNm.trim(), this.state.filterDpt.trim(), this.state.filterCourtKd);
 	},
 	//componentDidMount is a method called automatically by React after a component is rendered for the first time. 
 	componentDidMount: function(){
@@ -299,11 +312,9 @@ var CourtBox = React.createClass({
 		this.loadCourtFileData();
 	},
 	render: function(){
-		var result = <CourtList data={this.state.data.filter(this.condition)} filterCourtNm={this.state.filterCourtNm} 
-					filterDpt={this.state.filterDpt} onSelectRadio={this.handleRadioInput}/>;
+		var result = <CourtList data={this.state.data.filter(this.condition)} onSelectRadio={this.handleRadioInput} />;
 		if(this.state.mode==='Calendar'){
-			result = <Calerdar selected={moment().startOf("day")} data={this.state.data.filter(this.condition)} filterCourtNm={this.state.filterCourtNm} 
-					filterDpt={this.state.filterDpt} />;
+			result = <Calerdar selected={moment().startOf("day")} data={this.state.data.filter(this.condition)} />;
 		}else if(this.state.mode==='Contact'){
 			result = <Contact />;
 		}
@@ -316,9 +327,9 @@ var CourtBox = React.createClass({
 					sysArray={this.state.sysArray} sys={this.state.sys} 
 					onQuery={this.handleQueryInput} submitQuery={this.queryCourts} 
 					uiDisabled={this.state.uiDisabled} />
-				<FilterForm courtNms={this.state.courtNms} dpts={this.state.dpts}  
-					filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt} 
-					onFilter={this.handleFilterInput} uiDisabled={this.state.uiDisabled} />
+				<FilterForm courtNms={this.state.courtNms} dpts={this.state.dpts} courtKds={this.state.courtKds}
+					filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt} filterCourtKd={this.state.filterCourtKd}
+					onFilter={this.handleFilterInput} onCourtKDClick={this.onCourtKDClick} uiDisabled={this.state.uiDisabled} />
 				{/*<LoadingComp isloading={this.state.isloading} />*/}
 				{result}
 				<span id="addeventatc-block" className={"btn btn-default" + (this.state.mode!='List' ? " hidden" : "")}>
@@ -496,6 +507,9 @@ var FilterForm = React.createClass({
     		this.refs.dptInput.value
     	);
   	},
+  	handleCourtKDChange: function(e){
+  		this.props.onCourtKDClick(e.target);
+  	},
 	render: function() {
 		var courtNmNodes = this.props.courtNms.map(function(courtNm){
 			return(<option key={courtNm.courtid} value={courtNm.courtnm}>{courtNm.courtnm}</option>);
@@ -503,6 +517,10 @@ var FilterForm = React.createClass({
 		var dptNodes = this.props.dpts.map(function(dpt){
 			return(<option key={dpt} value={dpt}>{dpt}</option>);
 		});
+		var courtKdNodes = this.props.courtKds.map(function(courtKd){
+			return(<label><input key={courtKd} type="checkbox" ref="courtKdInput" forName="courtKdInput" onChange={this.handleCourtKDChange} value={courtKd} checked={this.props.filterCourtKd[courtKd]} />{courtKd}</label>);
+		}.bind(this));
+
 		//UI Disable
 		var opts={};
 		if (this.props.uiDisabled) {
@@ -511,7 +529,8 @@ var FilterForm = React.createClass({
 		return (
 			<div className="content">
 				<h4>篩選</h4>
-				<form className="form-inline">
+				<form >
+					<div className="form-group form-inline">
 					<div className="form-group">
 					<select ref="courtNmInput" onChange={this.handleFilterChange} className="form-control" value={this.props.filterCourtNm} {...opts}>
 						<option value="">所有法庭</option>
@@ -544,6 +563,10 @@ var FilterForm = React.createClass({
 						{dptNodes}	
 					</select>
 					</div>
+					</div>
+					<div ref="kddiv" className="form-group form-inline">
+					{courtKdNodes}
+					</div>
 				</form>
 			</div>
 		);
@@ -553,14 +576,6 @@ var FilterForm = React.createClass({
 
 //案件清單
 var CourtList = React.createClass({
-	condition: function(court){
-		return isfilterMatch(court, this.props.filterCourtNm.trim(), this.props.filterDpt.trim());
-		/*
-		var filterCourtNm = this.props.filterCourtNm.trim();
-		var filterDpt = this.props.filterDpt.trim();
-		return (!filterCourtNm || court.courtnm === filterCourtNm) && (!filterDpt || court.dpt === filterDpt);
-		*/
-	},
 	mapFunction: function(court){
 			var today = new Date();
 			return(
@@ -623,12 +638,6 @@ sys:"H"
 */
 var Court = React.createClass({
 	render: function() {
-		var status = "";
-		if(this.props.isToday){
-			if(typeof this.props.court.status != "undefined"){
-				status = <img src={"image/"+statusPic[this.props.court.status]} alt={this.props.court.status} title={this.props.court.status} class="" />;
-			}
-		}
 		return (
 			<tr>
 				{/*
@@ -655,6 +664,7 @@ var Court = React.createClass({
 	}	
 });
 
+//顯示開庭進度圖示
 var Status = React.createClass({
 	render() {
 		var status = null;
@@ -706,12 +716,12 @@ var Calerdar = React.createClass({
             count = 0,
             AMCut = 1300;//上下午時段切割點
         while (!done) {
+        	//上午
             weeks.push(<Week key={date.toString()+"_AM"} isAM={true} date={date.clone()} month={this.state.month} select={this.select} 
-            	selected={this.state.selected} data={this.props.data.filter(function(court) { return Number(court.courtime)<AMCut; })} filterCourtNm={this.props.filterCourtNm}  
-            	filterDpt={this.props.filterDpt} />);
+            	selected={this.state.selected} data={this.props.data.filter(function(court) { return Number(court.courtime)<AMCut; })} />);
+            //下午
             weeks.push(<Week key={date.toString()+"_PM"} isAM={false} date={date.clone()} month={this.state.month} select={this.select} 
-            	selected={this.state.selected} data={this.props.data.filter(function(court) { return Number(court.courtime)>AMCut; })} filterCourtNm={this.props.filterCourtNm}  
-            	filterDpt={this.props.filterDpt} />);            
+            	selected={this.state.selected} data={this.props.data.filter(function(court) { return Number(court.courtime)>AMCut; })} />);            
             date.add(1, "w");
             done = count++ > 2 && monthIndex !== date.month();
             monthIndex = date.month();
@@ -772,7 +782,7 @@ var Week = React.createClass({
             };
             days.push(<td key={day.date.toString()} className={"day" + (day.isToday ? " today" : "") + (day.isCurrentMonth ? "" : " different-month") + (day.date.isSame(this.props.selected) ? " selected" : "")} 
             	onClick={this.props.select.bind(null, day)}>{(this.props.isAM ? day.number : "")}
-            	<Event key={day.date.toString()} data={this.props.data} day={day} filterCourtNm={this.props.filterCourtNm} filterDpt={this.props.filterDpt} isAM={this.props.isAM} />
+            	<Event key={day.date.toString()} data={this.props.data} day={day} isAM={this.props.isAM} />
             	</td>);
             date = date.clone();
             date.add(1, "d");
@@ -785,9 +795,6 @@ var Week = React.createClass({
     }
 }); 
 var Event = React.createClass({
-	condition: function(court){
-		return isfilterMatch(court, this.props.filterCourtNm.trim(), this.props.filterDpt.trim());
-	},
 	render: function() {
 		var day = this.props.day;
 		var events=$.grep(this.props.data, function(court){ return court.realDate.isSame(day.date, "day");});
@@ -894,12 +901,12 @@ function getSessionStateUrl(crtid, sys, courtid){
 	//return "https://jsonp.afeld.me/?url=http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_CTSTATE.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26ducd%3D"+courtid;
 };
 
-function isfilterMatch(court, filterCourtNm, filterDpt){
+function isfilterMatch(court, filterCourtNm, filterDpt, filterCourtKdMap){
 		/*
 		var filterCourtNm = this.props.filterCourtNm.trim();
 		var filterDpt = this.props.filterDpt.trim();
 		*/
-		return (!filterCourtNm || court.courtnm === filterCourtNm) && (!filterDpt || court.dpt === filterDpt);
+		return (!filterCourtNm || court.courtnm === filterCourtNm) && (!filterDpt || court.dpt === filterDpt) && filterCourtKdMap[court.courtkd];
 }
 
 //處理TOP按鈕，等資料載入完再呼叫
