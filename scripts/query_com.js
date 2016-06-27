@@ -286,7 +286,7 @@ var CourtBox = React.createClass({
 								//console.log(status);
 								//console.log(courtData.length);
 								//var pos = this.state.courtNms.map(function(e) { return e.courtid; }).indexOf(status.crmid);//找出法庭清單對應的名字
-								console.log(countNew);
+								//console.log(countNew);
 								tmpCourt.push({
 									courtdate:status.dudt,
 									courtid:status.ducd,
@@ -580,7 +580,7 @@ var FilterForm = React.createClass({
 			return(<option key={dpt} value={dpt}>{dpt}</option>);
 		});
 		var courtKdNodes = this.props.courtKds.map(function(courtKd){
-			return(<label><input key={courtKd} type="checkbox" ref="courtKdInput" forName="courtKdInput" onChange={this.handleCourtKDChange} value={courtKd} checked={this.props.filterCourtKd[courtKd]} />{courtKd}</label>);
+			return(<label key={courtKd}><input key={courtKd} type="checkbox" ref="courtKdInput" forName="courtKdInput" onChange={this.handleCourtKDChange} value={courtKd} checked={this.props.filterCourtKd[courtKd]} />{courtKd}</label>);
 		}.bind(this));
 
 		//UI Disable
@@ -638,6 +638,57 @@ var FilterForm = React.createClass({
 
 //案件清單
 var CourtList = React.createClass({
+	
+	getInitialState: function() {
+        return {
+			isShowMore:false,
+			endPos:100,
+			dataCount:100,
+        };
+    },
+	showMoreData: function(){
+		var endPos = this.state.endPos+this.state.dataCount;
+		this.setState({endPos:endPos});
+		if(this.props.data.length>endPos && !this.state.isShowMore){
+			this.setState({isShowMore:true});
+		}else if(this.props.data.length<=endPos && this.state.isShowMore){
+			this.setState({isShowMore:false});
+		}
+	},
+	// componentWillUpdate:function(){
+	// 	console.log("componentWillUpdate");
+	// 	console.log(this.props.data.length + " " + this.state.endPos + " " + this.state.isShowMore);
+	// 	// if(this.props.data.length>this.state.endPos && !this.state.isShowMore){
+	// 	// 	this.setState({isShowMore:true});
+	// 	// }else if(this.props.data.length<=this.state.endPos && this.state.isShowMore){
+	// 	// 	this.setState({isShowMore:false});
+	// 	// }		
+	// },
+	//載入完資料後檢查是否需要有顯示更多的按鈕
+	componentDidUpdate:function(){
+		console.log("componentDidUpdate");
+		console.log(this.props.data.length + " " + this.state.endPos + " " + this.state.isShowMore);
+		if(this.props.data.length>this.state.endPos && !this.state.isShowMore){
+			this.setState({isShowMore:true});
+		}else if(this.props.data.length<=this.state.endPos && this.state.isShowMore){
+			this.setState({isShowMore:false});
+		}			
+	},
+	//切換模式後，需再檢查是否需要有顯示更多的按鈕
+	componentWillMount:function(){
+		console.log("componentWillMount");
+		console.log(this.props.data.length + " " + this.state.endPos + " " + this.state.isShowMore);
+		if(this.props.data.length>this.state.endPos && !this.state.isShowMore){
+			this.setState({isShowMore:true});
+		}					
+	},
+	// componentDidMount:function(){
+	// 	console.log("componentDidMount");	
+	// },	
+	// componentWillReceiveProps:function(){
+	// 	console.log("componentWillReceiveProps");	
+	// },	
+
 	mapFunction: function(court){
 			var today = new Date();
 			return(
@@ -645,13 +696,18 @@ var CourtList = React.createClass({
 			); 
 		},
 	render: function() {
+		var btnClass = "";
+		console.log(this.state.isShowMore);
+		if(!this.state.isShowMore){
+			btnClass = " hidden";
+		}
 		//console.log('out:'+this.props.filterCourtNm);
 		//var filterCourtNm = this.props.filterCourtNm.trim();
 		//console.log(this.props.data);
-		var courtNodes = this.props.data.map(this.mapFunction);
+		var courtNodes = this.props.data.filter(function(court, index) { return index<this.state.endPos; }.bind(this)).map(this.mapFunction);
 		return (
 			<div className="content">
-				<div>共{courtNodes.length}件</div>
+				<div>{courtNodes.length}件/共{this.props.data.length}件</div>
 				<table className="table table-bordered table-striped">
 					<thead>
 					<tr>
@@ -678,6 +734,7 @@ var CourtList = React.createClass({
 						{courtNodes}
 					</tbody>
 				</table>
+				<button ref="showMoreBtn" type="button" className={"btn btn-default"+btnClass} onClick={this.showMoreData}>顯示更多庭期</button>
 			</div>
 		);
 	}
