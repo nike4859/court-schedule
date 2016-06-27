@@ -235,6 +235,8 @@ var CourtBox = React.createClass({
 		var isJobsDone = Array.apply(null, {length: this.state.courtNms.length}).map(function() { return false; });
 		//console.log(isJobsDone);
 		var courtData = this.state.data;
+		var tmpCourt = [];
+		var countNew = 0;
 		this.state.courtNms.map(function(courtNm, courtNmIndex){
 			var url =  getSessionStateUrl(crtid,sys, courtNm.courtid);
 			//var url = "https://graph.facebook.com/10150232496792613";
@@ -284,7 +286,8 @@ var CourtBox = React.createClass({
 								//console.log(status);
 								//console.log(courtData.length);
 								//var pos = this.state.courtNms.map(function(e) { return e.courtid; }).indexOf(status.crmid);//找出法庭清單對應的名字
-								courtData.push({
+								console.log(countNew);
+								tmpCourt.push({
 									courtdate:status.dudt,
 									courtid:status.ducd,
 									courtime:status.dutm,
@@ -295,7 +298,7 @@ var CourtBox = React.createClass({
 									crmyy:status.crmyy,
 									crtid:status.crtcd,
 									dpt:status.dpt,
-									num:courtData.length,//用陣列最大值作為索引
+									num:(courtData.length + countNew),//用陣列最大值作為索引
 									sys:status.crmkd,
 									realDate:moment(ROCtoAD(status.dudt) + " " + status.dutm.insert(2,":"),"YYYY-MM-DD HH:mm"),
 									rstarttm:status.rstarttm,
@@ -303,6 +306,7 @@ var CourtBox = React.createClass({
 									status:status.status,
 									newadd:true
 								});
+								countNew++;
 							}
 						}
 						//this.setState({data:courtData});//更新資料
@@ -318,6 +322,38 @@ var CourtBox = React.createClass({
 					//console.log(isJobsDone);
 					if(isJobsDone.indexOf(false)<0){
 						console.log("All status jobs done.");
+
+						//照時間排序要插入的資料
+						tmpCourt.sort(function(a, b) {
+						    var atime = Number(a.courtdate+a.courtime);
+						    var btime = Number(b.courtdate+b.courtime);
+						    if (atime > btime) {
+						        return 1;
+						    }
+						    if (atime < btime) {
+						        return -1;
+						    }
+						    // a must be equal to b
+						    return 0;
+						});
+						//反向搜尋，避免插入時位置改變
+						var i = tmpCourt.length;//新增的資料
+						var j = courtData.length;//原本的資料
+						while( i-- ){
+							var newdata = Number(tmpCourt[i].courtdate+tmpCourt[i].courtime);//插入資料的時間
+							//console.log("j start:"+j);
+							while( j-- ){
+								var rawdata = Number(courtData[j].courtdate+courtData[j].courtime);//被插入的時間
+								if(newdata > rawdata){//插入資料的時間大於被插入的時間，往下一筆的位置插入
+									// console.log("insrt:"+j);
+									// console.log(tmpCourt[i]);
+									// console.log(newdata +" " +rawdata);
+									courtData.insert(j+1, tmpCourt[i]);
+									break;
+								}
+							}
+							
+						}
 						this.setState({data:courtData});//統一一次更新資料，降低更新頻率
 					}
 				}.bind(this),
@@ -1037,6 +1073,10 @@ function ROCtoAD(ROCdate){
 Array.prototype.getNameByIndex = function (value, findCol, returnCol){
 	var tmp = $.grep(this, function(e){ return e[findCol] == value;});
 	return tmp[0][returnCol];
+};
+
+Array.prototype.insert = function (index, item) {
+  this.splice(index, 0, item);
 };
 
 String.prototype.insert = function (index, string) {
