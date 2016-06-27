@@ -268,6 +268,7 @@ var CourtBox = React.createClass({
 						for(var i in array){//庭期進度
 							var status = array[i];
 							var statusIndex = status.crmyy+status.crmid+status.crmno+status.dudt+status.dutm+status.ducd;
+							var isExist = false;
 							for(var j in courtData){//庭期表
 								var court = courtData[j];
 								var courtIndex = court.crmyy+court.crmid+court.crmno+court.courtdate+court.courtime+court.courtid;
@@ -275,8 +276,33 @@ var CourtBox = React.createClass({
 									court.rstarttm = status.rstarttm;
 									court.rstoptm = status.rstoptm;
 									court.status = status.status;
+									isExist = true;
 									break;
 								}
+							}
+							if(!isExist && array.hasOwnProperty(i) ){//沒有存在再庭期表，且為該陣列原型
+								//console.log(status);
+								//console.log(courtData.length);
+								//var pos = this.state.courtNms.map(function(e) { return e.courtid; }).indexOf(status.crmid);//找出法庭清單對應的名字
+								courtData.push({
+									courtdate:status.dudt,
+									courtid:status.ducd,
+									courtime:status.dutm,
+									courtkd:status.dukd,
+									courtnm:courtNm.courtnm,//法庭名稱會冠上刑事.....
+									crmid:status.crmid,
+									crmno:status.crmno,
+									crmyy:status.crmyy,
+									crtid:status.crtcd,
+									dpt:status.dpt,
+									num:courtData.length,//用陣列最大值作為索引
+									sys:status.crmkd,
+									realDate:moment(ROCtoAD(status.dudt) + " " + status.dutm.insert(2,":"),"YYYY-MM-DD HH:mm"),
+									rstarttm:status.rstarttm,
+									rstoptm:status.rstoptm,
+									status:status.status,
+									newadd:true
+								});
 							}
 						}
 						//this.setState({data:courtData});//更新資料
@@ -671,6 +697,9 @@ var Status = React.createClass({
 		if(this.props.isToday){
 			if(typeof this.props.court.status != "undefined"){
 				status = <img src={"image/"+statusPic[this.props.court.status]} alt={this.props.court.status} title={this.props.court.status} clasName="" />;
+			}
+			if(typeof this.props.court.newadd != "undefined"){
+				status = <span>{status}<img src={"image/plus.png"} alt="臨時新增" title="臨時新增" clasName="" /></span>
 			}
 		}
 		return (
