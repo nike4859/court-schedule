@@ -501,7 +501,7 @@ var QueryForm = React.createClass({
 	componentDidMount: function(){
 	  	$(function() {
 	  		var today = new Date();
-	  		var days = 7;
+	  		var days = 14;
 	  		var parameters = {
 	  			dateFormat:"yy-mm-dd",
 	  			showButtonPanel: true,
@@ -666,8 +666,8 @@ var CourtList = React.createClass({
 	// },
 	//載入完資料後檢查是否需要有顯示更多的按鈕
 	componentDidUpdate:function(){
-		console.log("componentDidUpdate");
-		console.log(this.props.data.length + " " + this.state.endPos + " " + this.state.isShowMore);
+		//console.log("componentDidUpdate");
+		//console.log(this.props.data.length + " " + this.state.endPos + " " + this.state.isShowMore);
 		if(this.props.data.length>this.state.endPos && !this.state.isShowMore){
 			this.setState({isShowMore:true});
 		}else if(this.props.data.length<=this.state.endPos && this.state.isShowMore){
@@ -676,8 +676,8 @@ var CourtList = React.createClass({
 	},
 	//切換模式後，需再檢查是否需要有顯示更多的按鈕
 	componentWillMount:function(){
-		console.log("componentWillMount");
-		console.log(this.props.data.length + " " + this.state.endPos + " " + this.state.isShowMore);
+		//console.log("componentWillMount");
+		//console.log(this.props.data.length + " " + this.state.endPos + " " + this.state.isShowMore);
 		if(this.props.data.length>this.state.endPos && !this.state.isShowMore){
 			this.setState({isShowMore:true});
 		}					
@@ -697,7 +697,7 @@ var CourtList = React.createClass({
 		},
 	render: function() {
 		var btnClass = "";
-		console.log(this.state.isShowMore);
+		//console.log(this.state.isShowMore);
 		if(!this.state.isShowMore){
 			btnClass = " hidden";
 		}
@@ -706,8 +706,8 @@ var CourtList = React.createClass({
 		//console.log(this.props.data);
 		var courtNodes = this.props.data.filter(function(court, index) { return index<this.state.endPos; }.bind(this)).map(this.mapFunction);
 		return (
-			<div className="content">
-				<div>{courtNodes.length}件/共{this.props.data.length}件</div>
+			<div className="">
+				<div className="content">{courtNodes.length}件/共{this.props.data.length}件</div>
 				<table className="table table-bordered table-striped">
 					<thead>
 					<tr>
@@ -766,7 +766,7 @@ var Court = React.createClass({
 				<td>{this.props.court.crmyy}</td>
 				<td>{this.props.court.crmid}</td>
 				<td>{Number(this.props.court.crmno)}</td>
-				<td>{this.props.court.courtdate}</td>	
+				<td>{this.props.court.courtdate.insert(3," ")}</td>	
 				<td>{this.props.court.courtime.insert(2,":")}<Status isToday={this.props.isToday} court={this.props.court}/></td>
 				<td>{this.props.court.courtnm}</td>
 				<td>{this.props.court.dpt}</td>
