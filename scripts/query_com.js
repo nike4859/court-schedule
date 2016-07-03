@@ -668,6 +668,9 @@ var CourtList = React.createClass({
 	// },
 	//載入完資料後檢查是否需要有顯示更多的按鈕
 	componentDidUpdate:function(){
+		$(document).ready(function(){
+		    $('[data-toggle="tooltip"]').tooltip(); 
+		});
 		//console.log("componentDidUpdate");
 		//console.log(this.props.data.length + " " + this.state.endPos + " " + this.state.isShowMore);
 		if(this.props.data.length>this.state.endPos && !this.state.isShowMore){
@@ -725,7 +728,7 @@ var CourtList = React.createClass({
 						<td>法庭</td>
 						<td>股別</td>
 						<td>庭類</td>
-						<td><img src="image/calendar-clock24.png" alt="" /></td>
+						<td><img src="image/calendar-clock24.png" alt="" id="calimg" data-toggle="tooltip" data-placement="top" title="選取一個庭期後，點選右上方角落的按鈕加入你的行事曆" /></td>
 						{/*
 						<td>法庭</td>
 						<td>法院</td>
@@ -1108,7 +1111,6 @@ function getMultiUniqueList(array, properties) {
     }
     return distinct;
 };
-
 
 //format:YYYY-MM-DD
 function ADtoROC(ADdate){
