@@ -383,8 +383,6 @@ var CourtBox = React.createClass({
 		return (
 			<div className="queryBox">
 				<QueryNav onSelectMode={this.setMode}/>
-				<br/>
-				<br/>
 				<QueryForm crtids={this.state.crtids} crtid={this.state.crtid} 
 					sysArray={this.state.sysArray} sys={this.state.sys} 
 					onQuery={this.handleQueryInput} submitQuery={this.queryCourts} 
@@ -445,6 +443,10 @@ var QueryNav = React.createClass({
 			return(<MenuItem  key={menuItem.uid} active={(this.state.activeMenuItemUid === menuItem.uid)} 
 				onSelect={this.setActiveMenuItem} uid={menuItem.uid} />);        
 		},this);//如果要用到this記得要bind this
+		$('.nav a').on('click', function(){
+		    $('.btn-navbar').click(); //bootstrap 2.x
+		    $('.navbar-toggle').click() //bootstrap 3.x by Richard
+		});
         return (
 		    <nav className="navbar navbar-inverse navbar-fixed-top">
 		        <div className="container">

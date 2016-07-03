@@ -117,3 +117,36 @@ body {
 .license{
     text-align: center;
 }
+
+.advertisement {
+    margin-top: 50px;
+    background: url(../image/banner.jpg);
+    background-size: cover;
+    color: white;
+    text-align: center;
+    height:8em;
+}
+
+@media (max-width: 480px) {
+    .advertisement {
+        height: 5em;
+    }
+}
+
+@media (min-width: 768px){
+    .advertisement {
+        height: 10em;
+    }
+}
+
+@media (min-width: 1024px){
+    .advertisement {
+        height: 15em;
+    }
+}
+
+@media (min-width: 1600px){
+    .advertisement {
+        height: 18em;
+    }
+}
