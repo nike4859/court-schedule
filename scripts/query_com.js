@@ -61,6 +61,9 @@ var CourtBox = React.createClass({
 	},	
 	//設定查詢參數
 	handleQueryInput: function(crtid, sys){
+		//寫入Cookies
+		setCookie("crtid", crtid, 365);
+		setCookie("sys", crtid, 365);
 		this.setState({
 			crtid: crtid,
 			sys: sys
@@ -305,7 +308,7 @@ var CourtBox = React.createClass({
 	    		//dataType: 'json',
 				cache: false,
 				success: function(data){
-					//console.log(data);
+					console.log(data);
 					var count = data.query.count;
 					//console.log(data);
 					if(count>0){//當有回傳資料時
@@ -424,6 +427,16 @@ var CourtBox = React.createClass({
 	},
 	//componentDidMount is a method called automatically by React after a component is rendered for the first time. 
 	componentDidMount: function(){
+		//讀取Cookies
+		var crtid = getCookie("crtid");
+		var sys =getCookie("sys");
+		if(crtid && sys){
+			this.setState({
+				crtid: crtid,
+				sys: sys
+			});
+		}
+		
 		//console.log('test');
 		//this.loadCourtsFromServer("TYD","H");
 		//setInterval(this.loadCommentsFromServer, this.props.pollInterval);
@@ -747,9 +760,12 @@ var CourtList = React.createClass({
 	// },
 	//載入完資料後檢查是否需要有顯示更多的按鈕
 	componentDidUpdate:function(){
-		$(document).ready(function(){
+		//$(document).ready(function(){
 		    $('[data-toggle="tooltip"]').tooltip(); 
-		});
+		    $('#calimg').tooltip('show');
+		    setTimeout( function(){$('#calimg').tooltip('hide')}, 3000);
+		    //setTimeout( function(){alert('123')}, 500);
+		//});
 		//console.log("componentDidUpdate");
 		//console.log(this.props.data.length + " " + this.state.endPos + " " + this.state.isShowMore);
 		if(this.props.data.length>this.state.endPos && !this.state.isShowMore){
@@ -1233,6 +1249,29 @@ function ROCtoAD(ROCdate){
 	var ADdate = parseInt(ADdateNum/10000) + "-" + (parseInt(ADdateNum/100)%100) + "-"+ADdateNum%100;
 	return ADdate;//format:YYYY-MM-DD
 }
+
+function setCookie(cname, cvalue, exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+    var expires = "expires="+ d.toUTCString();
+    document.cookie = cname + "=" + cvalue + "; " + expires;
+}
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length,c.length);
+        }
+    }
+    return "";
+}
+
 /*
 	Array使用了property會造成資料多增加一筆，儲存內容為此function
 	可用 array.hasOwnProperty(i) 檢測該索引是否為原形本身就有的屬性。
