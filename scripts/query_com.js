@@ -99,8 +99,8 @@ var CourtBox = React.createClass({
 		//console.log("sort");
 		var data = this.state.data;
 		data.sort(function(a,b){
-			var aNum = Number(a.courtdate+(a.courtime<1300 ? "0" : "1")+a.courtid+""+a.courtime);
-			var bNum = Number(b.courtdate+(b.courtime<1300 ? "0" : "1")+b.courtid+""+b.courtime);
+			var aNum = Number(a.courtdate+(a.courtime<AMCut ? "0" : "1")+a.courtid+""+a.courtime);
+			var bNum = Number(b.courtdate+(b.courtime<AMCut ? "0" : "1")+b.courtid+""+b.courtime);
 			//console.log(aNum+" "+bNum);
 			if ( aNum >  bNum ) {
 				return 1;
@@ -919,8 +919,8 @@ var Calerdar = React.createClass({
             done = false,
             date = this.state.month.clone().startOf("month").add("w" -1).day("Sunday"),
             monthIndex = date.month(),
-            count = 0,
-            AMCut = 1300;//上下午時段切割點
+            count = 0;
+            //AMCut = 1300;//上下午時段切割點
         while (!done) {
         	//上午
             weeks.push(<Week key={date.toString()+"_AM"} isAM={true} date={date.clone()} month={this.state.month} select={this.select} 
@@ -1135,9 +1135,9 @@ function isfilterMatch(court, filterCourtNm, filterDpt, filterCourtKdMap, filter
 		}
 		var isMatchTime = true;
 		if(filterAmTimeflag>0){
-			isMatchTime = court.courtime < 1300;
+			isMatchTime = court.courtime < AMCut;
 		}else if(filterAmTimeflag<0){
-			isMatchTime = court.courtime > 1300;
+			isMatchTime = court.courtime > AMCut;
 		}
 		
 
@@ -1276,6 +1276,7 @@ var amTimes = [
 	"下午"
 ];
 
+var AMCut = 1300;
 /*
 cross domain處理YQL
 http://clayliao.blogspot.tw/2011/03/yqlintroduxtion.html
