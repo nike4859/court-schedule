@@ -69,6 +69,24 @@ var CourtBox = React.createClass({
 		});
 		console.log(mode);
 	},
+	sortData: function(){
+		console.log("sort");
+		var data = this.state.data;
+		data.sort(function(a,b){
+			var aNum = Number(a.courtdate+(a.courtime<1300 ? "0" : "1")+a.courtid+""+a.courtime);
+			var bNum = Number(b.courtdate+(b.courtime<1300 ? "0" : "1")+b.courtid+""+b.courtime);
+			//console.log(aNum+" "+bNum);
+			if ( aNum >  bNum ) {
+				return 1;
+			}
+			if ( aNum < bNum ) {
+				return -1;
+			}
+			 // a must be equal to b
+			return 0;			
+		});
+		this.setState({data:data});
+	},
 	//查詢法院案件
 	queryCourts: function(crtid, sys, date1, date2){
 		//console.log(this.state.crtid+ this.state.sys);
@@ -126,7 +144,11 @@ var CourtBox = React.createClass({
 					// nm.sort();
 					//取出股別清單
 					var dpt = getUniqueList(array,"dpt");//取出不重複股別
-					dpt.sort();
+					//照筆畫排序
+					dpt.sort(function(a,b){
+						return a.localeCompare(b);
+					});
+					//dpt.sort();
 					var courtkd = getUniqueList(array,"courtkd");//取出不重複庭類
 					courtkd.sort();
 					var courtkdSelect=[];
@@ -389,7 +411,7 @@ var CourtBox = React.createClass({
 					uiDisabled={this.state.uiDisabled} />
 				<FilterForm courtNms={this.state.courtNms} dpts={this.state.dpts} courtKds={this.state.courtKds}
 					filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt} filterCourtKd={this.state.filterCourtKd}
-					onFilter={this.handleFilterInput} onCourtKDClick={this.onCourtKDClick} uiDisabled={this.state.uiDisabled} />
+					onFilter={this.handleFilterInput} onCourtKDClick={this.onCourtKDClick} uiDisabled={this.state.uiDisabled} sortData={this.sortData}/>
 				{/*<LoadingComp isloading={this.state.isloading} />*/}
 				{result}
 				<span id="addeventatc-block" className={"btn btn-default" + (this.state.mode!='List' ? " hidden" : "")}>
@@ -595,41 +617,44 @@ var FilterForm = React.createClass({
 				<h4>篩選</h4>
 				<form >
 					<div className="form-group form-inline">
-					<div className="form-group">
-					<select ref="courtNmInput" onChange={this.handleFilterChange} className="form-control" value={this.props.filterCourtNm} {...opts}>
-						<option value="">所有法庭</option>
-						{courtNmNodes}
-						{/*
-						<option value="第一法庭">第一法庭</option>
-						<option value="第二法庭">第二法庭</option>
-						<option value="第三法庭">第三法庭</option>
-						<option value="第四法庭">第四法庭</option>
-						<option value="第五法庭">第五法庭</option>
-						<option value="第六法庭">第六法庭</option>
-						<option value="第七法庭">第七法庭</option>
-						<option value="第八法庭">第八法庭</option>
-						<option value="第九法庭">第九法庭</option>
-						<option value="第十法庭">第十法庭</option>
-						<option value="第十一法庭">第十一法庭</option>
-						<option value="第十二法庭">第十二法庭</option>
-						<option value="第十三法庭">第十三法庭</option>
-						<option value="第十四法庭">第十四法庭</option>
-						<option value="第十五法庭">第十五法庭</option>
-						<option value="第十六法庭">第十六法庭</option>
-						<option value="第十七法庭">第十七法庭</option>
-						<option value="第十八法庭">第十八法庭</option>	
-						*/}			
-					</select>
-					</div>
-					<div className="form-group">
-					<select ref="dptInput" onChange={this.handleFilterChange} className="form-control" value={this.props.filterDpt} {...opts}>
-						<option value="">所有股別</option>
-						{dptNodes}	
-					</select>
-					</div>
+						<div className="form-group">
+							<select ref="courtNmInput" onChange={this.handleFilterChange} className="form-control" value={this.props.filterCourtNm} {...opts}>
+								<option value="">所有法庭</option>
+								{courtNmNodes}
+								{/*
+								<option value="第一法庭">第一法庭</option>
+								<option value="第二法庭">第二法庭</option>
+								<option value="第三法庭">第三法庭</option>
+								<option value="第四法庭">第四法庭</option>
+								<option value="第五法庭">第五法庭</option>
+								<option value="第六法庭">第六法庭</option>
+								<option value="第七法庭">第七法庭</option>
+								<option value="第八法庭">第八法庭</option>
+								<option value="第九法庭">第九法庭</option>
+								<option value="第十法庭">第十法庭</option>
+								<option value="第十一法庭">第十一法庭</option>
+								<option value="第十二法庭">第十二法庭</option>
+								<option value="第十三法庭">第十三法庭</option>
+								<option value="第十四法庭">第十四法庭</option>
+								<option value="第十五法庭">第十五法庭</option>
+								<option value="第十六法庭">第十六法庭</option>
+								<option value="第十七法庭">第十七法庭</option>
+								<option value="第十八法庭">第十八法庭</option>	
+								*/}			
+							</select>
+						</div>
+						<div className="form-group">
+							<select ref="dptInput" onChange={this.handleFilterChange} className="form-control" value={this.props.filterDpt} {...opts}>
+								<option value="">所有股別</option>
+								{dptNodes}	
+							</select>
+						</div>
 					</div>
 					<div ref="kddiv" className="form-group form-inline">
 					{courtKdNodes}
+					</div>
+					<div>
+					<button ref="sortBtn" type="button" className="btn btn-warning" onClick={this.props.sortData} {...opts}>找空庭 (依法庭排序)</button>
 					</div>
 				</form>
 			</div>
