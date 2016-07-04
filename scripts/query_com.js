@@ -23,6 +23,9 @@ var CourtBox = React.createClass({
 	},
 	//設定篩選參數
 	handleFilterInput: function(filterCourtNm, filterDpt){
+		//寫入Cookies
+		setCookie("filterCourtNm", filterCourtNm, 365);
+		setCookie("filterDpt", filterDpt, 365);
 		this.setState({
 			filterCourtNm: filterCourtNm,
 			filterDpt: filterDpt
@@ -63,7 +66,7 @@ var CourtBox = React.createClass({
 	handleQueryInput: function(crtid, sys){
 		//寫入Cookies
 		setCookie("crtid", crtid, 365);
-		setCookie("sys", crtid, 365);
+		setCookie("sys", sys, 365);
 		this.setState({
 			crtid: crtid,
 			sys: sys
@@ -216,6 +219,21 @@ var CourtBox = React.createClass({
 					// dpt.sort();
 					// console.timeEnd("concatenation");
 					
+					//讀取Cookies
+					var filterCourtNm = getCookie("filterCourtNm");
+					var filterDpt = getCookie("filterDpt");
+					console.log(filterCourtNm+" "+filterDpt);
+					if(filterCourtNm){
+						this.setState({
+							filterCourtNm: filterCourtNm
+						});
+					}
+					if(filterDpt){
+						this.setState({
+							filterDpt: filterDpt
+						});
+					}
+
 					//檢查是否股別存在於股別清單中
 					if(dpt.indexOf(this.state.filterDpt)<0){
 						this.setState({filterDpt:""});//清空篩選股別
@@ -308,7 +326,7 @@ var CourtBox = React.createClass({
 	    		//dataType: 'json',
 				cache: false,
 				success: function(data){
-					console.log(data);
+					//console.log(data);
 					var count = data.query.count;
 					//console.log(data);
 					if(count>0){//當有回傳資料時
@@ -429,7 +447,8 @@ var CourtBox = React.createClass({
 	componentDidMount: function(){
 		//讀取Cookies
 		var crtid = getCookie("crtid");
-		var sys =getCookie("sys");
+		var sys = getCookie("sys");
+		console.log(crtid+" "+sys);
 		if(crtid && sys){
 			this.setState({
 				crtid: crtid,
