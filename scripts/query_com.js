@@ -6,13 +6,15 @@ var CourtBox = React.createClass({
 			filterCourtNm: '',//篩選法庭
 			filterDpt:'',//篩選股別
 			filterCourtKd:[],//篩選庭類
+			filterArray:[],//文字篩選器
+			filterAmTime:[],//早上跟下午的選項
+			filterAmTimeflag:0,//早上跟下午的選項
 			courtNms:[],//法庭清單
 			dpts:[],//股別清單
 			courtKds:[],//庭類清單
 			crtids:[],//法院清單
 			crtid:'TYD',//法院
 			sysArray:[],//庭別清單
-			filterArray:[],//文字篩選器
 			sys:'H',//庭別
 			isloading: false,//是否讀取中
 			uiDisabled: false,//UI是否啟用
@@ -26,6 +28,7 @@ var CourtBox = React.createClass({
 			filterDpt: filterDpt
 		});
 	},
+	//庭別篩選
 	onCourtKDClick: function(checkbox){
 		var tmp = this.state.filterCourtKd;
 		//console.log(tmp);
@@ -34,6 +37,28 @@ var CourtBox = React.createClass({
 			filterCourtKd: tmp
 		});
 	},
+	//上下午篩選
+	onAmTimeClick: function(checkbox){
+		var tmp = this.state.filterAmTime;
+		tmp[checkbox.value] = !tmp[checkbox.value];
+		//console.log(tmp);
+		if(!tmp[amTimes[0]] && !tmp[amTimes[1]]){
+			tmp[amTimes[0]] = true;
+			tmp[amTimes[1]] = true;
+			tmp[checkbox.value] = !tmp[checkbox.value];
+		}
+		var flag=0;
+		if(tmp[amTimes[0]] && tmp[amTimes[1]]){
+		}else if(tmp[amTimes[0]]){
+			flag=1;
+		}else if(tmp[amTimes[1]]){
+			flag=-1;
+		}		
+		this.setState({
+			filterAmTime: tmp,
+			filterAmTimeflag: flag
+		});
+	},	
 	//設定查詢參數
 	handleQueryInput: function(crtid, sys){
 		this.setState({
@@ -71,7 +96,7 @@ var CourtBox = React.createClass({
 		console.log(mode);
 	},
 	sortData: function(){
-		console.log("sort");
+		//console.log("sort");
 		var data = this.state.data;
 		data.sort(function(a,b){
 			var aNum = Number(a.courtdate+(a.courtime<1300 ? "0" : "1")+a.courtid+""+a.courtime);
@@ -198,7 +223,10 @@ var CourtBox = React.createClass({
 						this.setState({filterCourtNm:""});//清空篩選法庭
 					}
 
-					this.setState({data:array, courtNms:nm, dpts:dpt, courtKds:courtkd, filterCourtKd:courtkdSelect});
+					var amTimeSelect=[];
+					amTimes.map(function(item) { amTimeSelect[item]=true; });//初始化上下午選擇
+
+					this.setState({data:array, courtNms:nm, dpts:dpt, courtKds:courtkd, filterCourtKd:courtkdSelect, filterAmTime:amTimeSelect});
 					//console.timeEnd("concatenation");
 					//console.log(nm);
 					addScrollTop();
@@ -392,7 +420,7 @@ var CourtBox = React.createClass({
 	},
 	//資料條件篩選
 	condition: function(court){
-		return isfilterMatch(court, this.state.filterCourtNm.trim(), this.state.filterDpt.trim(), this.state.filterCourtKd, this.state.filterArray);
+		return isfilterMatch(court, this.state.filterCourtNm.trim(), this.state.filterDpt.trim(), this.state.filterCourtKd, this.state.filterArray, this.state.filterAmTimeflag);
 	},
 	//componentDidMount is a method called automatically by React after a component is rendered for the first time. 
 	componentDidMount: function(){
@@ -419,7 +447,7 @@ var CourtBox = React.createClass({
 				<FilterForm courtNms={this.state.courtNms} dpts={this.state.dpts} courtKds={this.state.courtKds}
 					filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt} filterCourtKd={this.state.filterCourtKd}
 					onFilter={this.handleFilterInput} onCourtKDClick={this.onCourtKDClick} uiDisabled={this.state.uiDisabled} 
-					sortData={this.sortData} filterText={this.filterText}/>
+					sortData={this.sortData} filterText={this.filterText} filterAmTime={this.state.filterAmTime} onAmTimeClick={this.onAmTimeClick}/>
 				{/*<LoadingComp isloading={this.state.isloading} />*/}
 				{result}
 				<span id="addeventatc-block" className={"btn btn-default" + (this.state.mode!='List' ? " hidden" : "")}>
@@ -604,6 +632,10 @@ var FilterForm = React.createClass({
   	handleCourtKDChange: function(e){
   		this.props.onCourtKDClick(e.target);
   	},
+  	handleAmTimeChange: function(e){
+  		this.props.onAmTimeClick(e.target);
+  	},
+
   	filterTextChange:function(e){
   		var str = e.target.value.trim();
   		//if(str){
@@ -620,6 +652,10 @@ var FilterForm = React.createClass({
 		});
 		var courtKdNodes = this.props.courtKds.map(function(courtKd){
 			return(<label key={courtKd}><input key={courtKd} type="checkbox" ref="courtKdInput" forName="courtKdInput" onChange={this.handleCourtKDChange} value={courtKd} checked={this.props.filterCourtKd[courtKd]} />{courtKd}</label>);
+		}.bind(this));
+
+		var amTimeNodes = amTimes.map(function(time){
+			return(<label key={time}><input key={time} type="checkbox" ref="timeInput" forName="timeInput" onChange={this.handleAmTimeChange} value={time} checked={this.props.filterAmTime[time]} />{time}</label>);
 		}.bind(this));
 
 		//UI Disable
@@ -668,11 +704,11 @@ var FilterForm = React.createClass({
 					<div ref="kddiv" className="form-group form-inline">
 						{courtKdNodes}
 					</div>
-					<div className="form-group">
+					<div className="form-group" >
 						<input ref="searchText" type="text" className="form-control" placeholder="請輸入年度、字別、案號、法庭或股別，以空白分隔，例如 105 訴 128" onChange={this.filterTextChange} {...opts}/>
 					</div>
-					<div>
-						<button ref="sortBtn" type="button" className="btn btn-warning" onClick={this.props.sortData} {...opts}>找空庭 (依法庭排序)</button>
+					<div className="form-group form-inline">
+						<button ref="sortBtn" type="button" className="btn btn-warning" onClick={this.props.sortData} {...opts}>找空庭嗎? (依法庭排序)</button> {amTimeNodes}
 					</div>
 				</form>
 			</div>
@@ -1071,7 +1107,7 @@ function getSessionStateUrl(crtid, sys, courtid){
 	//return "https://jsonp.afeld.me/?url=http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_CTSTATE.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26ducd%3D"+courtid;
 };
 
-function isfilterMatch(court, filterCourtNm, filterDpt, filterCourtKdMap, filterTextArray){
+function isfilterMatch(court, filterCourtNm, filterDpt, filterCourtKdMap, filterTextArray, filterAmTimeflag){
 		/*
 		var filterCourtNm = this.props.filterCourtNm.trim();
 		var filterDpt = this.props.filterDpt.trim();
@@ -1097,8 +1133,15 @@ function isfilterMatch(court, filterCourtNm, filterDpt, filterCourtKdMap, filter
 				}
 			}
 		}
+		var isMatchTime = true;
+		if(filterAmTimeflag>0){
+			isMatchTime = court.courtime < 1300;
+		}else if(filterAmTimeflag<0){
+			isMatchTime = court.courtime > 1300;
+		}
+		
 
-		return (!filterCourtNm || court.courtnm === filterCourtNm) && (!filterDpt || court.dpt === filterDpt) && filterCourtKdMap[court.courtkd] && isMatchText;
+		return (!filterCourtNm || court.courtnm === filterCourtNm) && (!filterDpt || court.dpt === filterDpt) && filterCourtKdMap[court.courtkd] && isMatchText && isMatchTime;
 }
 
 //處理TOP按鈕，等資料載入完再呼叫
@@ -1227,6 +1270,10 @@ var searchAttribute = [
 	"crmno",
 	"courtnm",
 	"dpt"
+];
+var amTimes = [
+	"上午",
+	"下午"
 ];
 
 /*
