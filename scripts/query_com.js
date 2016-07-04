@@ -12,6 +12,7 @@ var CourtBox = React.createClass({
 			crtids:[],//法院清單
 			crtid:'TYD',//法院
 			sysArray:[],//庭別清單
+			filterArray:[],//文字篩選器
 			sys:'H',//庭別
 			isloading: false,//是否讀取中
 			uiDisabled: false,//UI是否啟用
@@ -86,6 +87,12 @@ var CourtBox = React.createClass({
 			return 0;			
 		});
 		this.setState({data:data});
+	},
+	filterText: function(filterArray){
+		console.log(filterArray);
+		this.setState({
+			filterArray:filterArray
+		});
 	},
 	//查詢法院案件
 	queryCourts: function(crtid, sys, date1, date2){
@@ -385,7 +392,7 @@ var CourtBox = React.createClass({
 	},
 	//資料條件篩選
 	condition: function(court){
-		return isfilterMatch(court, this.state.filterCourtNm.trim(), this.state.filterDpt.trim(), this.state.filterCourtKd);
+		return isfilterMatch(court, this.state.filterCourtNm.trim(), this.state.filterDpt.trim(), this.state.filterCourtKd, this.state.filterArray);
 	},
 	//componentDidMount is a method called automatically by React after a component is rendered for the first time. 
 	componentDidMount: function(){
@@ -411,7 +418,8 @@ var CourtBox = React.createClass({
 					uiDisabled={this.state.uiDisabled} />
 				<FilterForm courtNms={this.state.courtNms} dpts={this.state.dpts} courtKds={this.state.courtKds}
 					filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt} filterCourtKd={this.state.filterCourtKd}
-					onFilter={this.handleFilterInput} onCourtKDClick={this.onCourtKDClick} uiDisabled={this.state.uiDisabled} sortData={this.sortData}/>
+					onFilter={this.handleFilterInput} onCourtKDClick={this.onCourtKDClick} uiDisabled={this.state.uiDisabled} 
+					sortData={this.sortData} filterText={this.filterText}/>
 				{/*<LoadingComp isloading={this.state.isloading} />*/}
 				{result}
 				<span id="addeventatc-block" className={"btn btn-default" + (this.state.mode!='List' ? " hidden" : "")}>
@@ -596,6 +604,13 @@ var FilterForm = React.createClass({
   	handleCourtKDChange: function(e){
   		this.props.onCourtKDClick(e.target);
   	},
+  	filterTextChange:function(e){
+  		var str = e.target.value.trim();
+  		//if(str){
+  			var array = str.split(" ");
+  			this.props.filterText(array);
+  		//}
+  	},
 	render: function() {
 		var courtNmNodes = this.props.courtNms.map(function(courtNm){
 			return(<option key={courtNm.courtid} value={courtNm.courtnm}>{courtNm.courtnm}</option>);
@@ -651,10 +666,12 @@ var FilterForm = React.createClass({
 						</div>
 					</div>
 					<div ref="kddiv" className="form-group form-inline">
-					{courtKdNodes}
+						{courtKdNodes}
+					</div>
+					<div className="form-group">
 					</div>
 					<div>
-					<button ref="sortBtn" type="button" className="btn btn-warning" onClick={this.props.sortData} {...opts}>找空庭 (依法庭排序)</button>
+						<button ref="sortBtn" type="button" className="btn btn-warning" onClick={this.props.sortData} {...opts}>找空庭 (依法庭排序)</button>
 					</div>
 				</form>
 			</div>
@@ -1053,12 +1070,34 @@ function getSessionStateUrl(crtid, sys, courtid){
 	//return "https://jsonp.afeld.me/?url=http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_CTSTATE.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26ducd%3D"+courtid;
 };
 
-function isfilterMatch(court, filterCourtNm, filterDpt, filterCourtKdMap){
+function isfilterMatch(court, filterCourtNm, filterDpt, filterCourtKdMap, filterTextArray){
 		/*
 		var filterCourtNm = this.props.filterCourtNm.trim();
 		var filterDpt = this.props.filterDpt.trim();
 		*/
-		return (!filterCourtNm || court.courtnm === filterCourtNm) && (!filterDpt || court.dpt === filterDpt) && filterCourtKdMap[court.courtkd];
+		
+		//console.log(str);
+		//搜尋字串
+		var isMatchText = true;
+		if(filterTextArray.length>0){
+			//把資料串成字串
+			var str="";
+			for (var attrname in searchAttribute) { 
+				if(searchAttribute.hasOwnProperty(attrname)){
+					str=str+court[searchAttribute[attrname]]; 
+				}
+			}
+			//onsole.log(filterTextArray.length);
+			for(var i in filterTextArray){
+				if(filterTextArray.hasOwnProperty(i) && str.indexOf(filterTextArray[i])<0){
+					//console.log(filterTextArray[i] + " "+ str.indexOf(filterTextArray[i]));
+					isMatchText = false;
+					break;
+				}
+			}
+		}
+
+		return (!filterCourtNm || court.courtnm === filterCourtNm) && (!filterDpt || court.dpt === filterDpt) && filterCourtKdMap[court.courtkd] && isMatchText;
 }
 
 //處理TOP按鈕，等資料載入完再呼叫
@@ -1180,6 +1219,14 @@ var statusPic = {
 	"未開庭":"status-offline.png",
 	"未聽判":"status-offline.png"
 };
+
+var searchAttribute = [
+	"crmyy",
+	"crmid",
+	"crmno",
+	"courtnm",
+	"dpt"
+];
 
 /*
 cross domain處理YQL
