@@ -669,6 +669,7 @@ var FilterForm = React.createClass({
 						{courtKdNodes}
 					</div>
 					<div className="form-group">
+						<input ref="searchText" type="text" className="form-control" placeholder="請輸入年度、字別、案號、法庭或股別，以空白分隔，例如 105 訴 128" onChange={this.filterTextChange} {...opts}/>
 					</div>
 					<div>
 						<button ref="sortBtn" type="button" className="btn btn-warning" onClick={this.props.sortData} {...opts}>找空庭 (依法庭排序)</button>
