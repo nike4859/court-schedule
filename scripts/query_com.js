@@ -24,7 +24,9 @@ var CourtBox = React.createClass({
 	//設定篩選參數
 	handleFilterInput: function(filterCourtNm, filterDpt){
 		//寫入Cookies
-		setCookie("filterCourtNm", filterCourtNm, 365);
+		var courtid = this.state.courtNms[this.state.courtNms.map(function(tmp) {return tmp.courtnm;}).indexOf(filterCourtNm)].courtid;//法庭轉ID
+		//console.log(id);
+		setCookie("filterCourtNm", courtid, 365);
 		setCookie("filterDpt", filterDpt, 365);
 		this.setState({
 			filterCourtNm: filterCourtNm,
@@ -218,12 +220,13 @@ var CourtBox = React.createClass({
 					// nm.sort();
 					// dpt.sort();
 					// console.timeEnd("concatenation");
-					
+			
 					//讀取Cookies
-					var filterCourtNm = getCookie("filterCourtNm");
+					var filterCourtid = getCookie("filterCourtNm");
 					var filterDpt = getCookie("filterDpt");
 					console.log(filterCourtNm+" "+filterDpt);
 					if(filterCourtNm){
+						var filterCourtNm = nm[nm.map(function(tmp) {return tmp.courtid;}).indexOf(filterCourtid)].courtnm;//ID轉法庭名稱
 						this.setState({
 							filterCourtNm: filterCourtNm
 						});
@@ -1049,7 +1052,9 @@ var Event = React.createClass({
 							court.dpt + "股 " + court.crmyy  + "" + court.crmid  + "" + Number(court.crmno) + " " + 
 							court.courtkd}<Status isToday={isToday} court={court}/></div>
 						}.bind(this));
-        return <div>{"共"+eventNodes.length+"件"+eventNodes}</div>
+		
+		var countLabel = ( (eventNodes.length>0)?"共"+eventNodes.length+"件":"");
+        return <div>{countLabel}{eventNodes}</div>
     }
 });  
 
