@@ -780,10 +780,13 @@ var CourtList = React.createClass({
 	//載入完資料後檢查是否需要有顯示更多的按鈕
 	componentDidUpdate:function(){
 		//$(document).ready(function(){
-		    $('[data-toggle="tooltip"]').tooltip(); 
-		    $('#calimg').tooltip('show');
-		    setTimeout( function(){$('#calimg').tooltip('hide')}, 3000);
-		    //setTimeout( function(){alert('123')}, 500);
+		    $('[data-toggle="tooltip"]').tooltip();
+		    if(isShowToooltips){
+			    $('#calimg').tooltip('show');
+			    setTimeout( function(){$('#calimg').tooltip('hide')}, 3000);
+			    //setTimeout( function(){alert('123')}, 500);
+			    isShowToooltips=false
+			}
 		//});
 		//console.log("componentDidUpdate");
 		//console.log(this.props.data.length + " " + this.state.endPos + " " + this.state.isShowMore);
@@ -1022,7 +1025,7 @@ var Week = React.createClass({
                 date: date
             };
             days.push(<td key={day.date.toString()} className={"day" + (day.isToday ? " today" : "") + (day.isCurrentMonth ? "" : " different-month") + (day.date.isSame(this.props.selected) ? " selected" : "")} 
-            	onClick={this.props.select.bind(null, day)}>{(this.props.isAM ? day.number : "")}
+            	onClick={this.props.select.bind(null, day)}>{(this.props.isAM ? day.number : "")+" 共"+ this.props.data.length  +"件"}
             	<Event key={day.date.toString()} data={this.props.data} day={day} isAM={this.props.isAM} />
             	</td>);
             date = date.clone();
@@ -1334,7 +1337,8 @@ var amTimes = [
 	"下午"
 ];
 
-var AMCut = 1300;
+var AMCut = 1300,
+	isShowToooltips = true;
 /*
 cross domain處理YQL
 http://clayliao.blogspot.tw/2011/03/yqlintroduxtion.html
