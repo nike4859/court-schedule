@@ -24,10 +24,17 @@ var CourtBox = React.createClass({
 	//設定篩選參數
 	handleFilterInput: function(filterCourtNm, filterDpt){
 		//寫入Cookies
-		var courtid = this.state.courtNms[this.state.courtNms.map(function(tmp) {return tmp.courtnm;}).indexOf(filterCourtNm)].courtid;//法庭轉ID
-		//console.log(id);
-		setCookie("filterCourtNm", courtid, 365);
-		setCookie("filterDpt", filterDpt, 365);
+		if(filterCourtNm){
+			//var courtid = this.state.courtNms[this.state.courtNms.map(function(tmp) {return tmp.courtnm;}).indexOf(filterCourtNm)].courtid;//法庭轉ID
+			setCookie("filterCourtNm", filterCourtNm, 365);
+		}else{
+			deleteCookie("filterCourtNm");
+		}
+		if(filterDpt){
+			setCookie("filterDpt", filterDpt, 365);
+		}else{
+			deleteCookie("filterDpt");
+		}
 		this.setState({
 			filterCourtNm: filterCourtNm,
 			filterDpt: filterDpt
@@ -222,11 +229,11 @@ var CourtBox = React.createClass({
 					// console.timeEnd("concatenation");
 			
 					//讀取Cookies
-					var filterCourtid = getCookie("filterCourtNm");
+					var filterCourtNm = getCookie("filterCourtNm");
 					var filterDpt = getCookie("filterDpt");
-					console.log(filterCourtNm+" "+filterDpt);
+					console.log("room:"+filterCourtNm+" / "+filterDpt);
 					if(filterCourtNm){
-						var filterCourtNm = nm[nm.map(function(tmp) {return tmp.courtid;}).indexOf(filterCourtid)].courtnm;//ID轉法庭名稱
+						//var filterCourtNm = nm[nm.map(function(tmp) {return tmp.courtid;}).indexOf(filterCourtid)].courtnm;//ID轉法庭名稱
 						this.setState({
 							filterCourtNm: filterCourtNm
 						});
@@ -236,6 +243,7 @@ var CourtBox = React.createClass({
 							filterDpt: filterDpt
 						});
 					}
+					this.forceUpdate();
 
 					//檢查是否股別存在於股別清單中
 					if(dpt.indexOf(this.state.filterDpt)<0){
@@ -786,7 +794,7 @@ var CourtList = React.createClass({
 		    $('[data-toggle="tooltip"]').tooltip();
 		    if(isShowToooltips){
 			    $('#calimg').tooltip('show');
-			    setTimeout( function(){$('#calimg').tooltip('hide')}, 3000);
+			    setTimeout( function(){$('#calimg').tooltip('hide')}, 10000);
 			    //setTimeout( function(){alert('123')}, 500);
 			    isShowToooltips=false;
 			}
@@ -1297,6 +1305,10 @@ function getCookie(cname) {
         }
     }
     return "";
+}
+
+function deleteCookie(cname) {
+  document.cookie = cname + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 }
 
 /*
