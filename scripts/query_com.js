@@ -785,7 +785,7 @@ var CourtList = React.createClass({
 			    $('#calimg').tooltip('show');
 			    setTimeout( function(){$('#calimg').tooltip('hide')}, 3000);
 			    //setTimeout( function(){alert('123')}, 500);
-			    isShowToooltips=false
+			    isShowToooltips=false;
 			}
 		//});
 		//console.log("componentDidUpdate");
@@ -1025,7 +1025,7 @@ var Week = React.createClass({
                 date: date
             };
             days.push(<td key={day.date.toString()} className={"day" + (day.isToday ? " today" : "") + (day.isCurrentMonth ? "" : " different-month") + (day.date.isSame(this.props.selected) ? " selected" : "")} 
-            	onClick={this.props.select.bind(null, day)}>{(this.props.isAM ? day.number : "")+" 共"+ this.props.data.length  +"件"}
+            	onClick={this.props.select.bind(null, day)}>{(this.props.isAM ? day.number : "")}
             	<Event key={day.date.toString()} data={this.props.data} day={day} isAM={this.props.isAM} />
             	</td>);
             date = date.clone();
@@ -1049,7 +1049,7 @@ var Event = React.createClass({
 							court.dpt + "股 " + court.crmyy  + "" + court.crmid  + "" + Number(court.crmno) + " " + 
 							court.courtkd}<Status isToday={isToday} court={court}/></div>
 						}.bind(this));
-        return <div>{eventNodes}</div>
+        return <div>{"共"+eventNodes.length+"件"+eventNodes}</div>
     }
 });  
 
