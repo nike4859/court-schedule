@@ -748,7 +748,7 @@ var FilterForm = React.createClass({
 						{courtKdNodes}
 					</div>
 					<div className="form-group" >
-						<input ref="searchText" type="text" className="form-control" placeholder="請輸入年度、字別、案號、法庭或股別，以空白分隔，例如 105 訴 128" onChange={this.filterTextChange} {...opts}/>
+						<input ref="searchText" type="text" className="form-control" placeholder="請輸入年度、字別、案號、法庭或股別，以空白分隔，例如 105 訴 128" onChange={this.filterTextChange}  data-toggle="tooltip" data-placement="top" title="請輸入年度、字別、案號、法庭或股別，以空白分隔，例如 105 訴 128" {...opts}/>
 					</div>
 					<div className="form-group form-inline">
 						<button ref="sortBtn" type="button" className="btn btn-warning" onClick={this.props.sortData} {...opts}>找空庭嗎? (依法庭排序)</button> {amTimeNodes}
@@ -791,10 +791,10 @@ var CourtList = React.createClass({
 	//載入完資料後檢查是否需要有顯示更多的按鈕
 	componentDidUpdate:function(){
 		//$(document).ready(function(){
-		    $('[data-toggle="tooltip"]').tooltip();
+		    $('[data-toggle="tooltip"]').tooltip();//顯示提示
 		    if(isShowToooltips){
-			    $('#calimg').tooltip('show');
-			    setTimeout( function(){$('#calimg').tooltip('hide')}, 10000);
+		    	setTimeout( function(){$('#calimg').tooltip('show')}, 2000);//不能立刻顯示，否則jquery還沒載入完成tooltips
+			    setTimeout( function(){$('#calimg').tooltip('hide')}, 12000);
 			    //setTimeout( function(){alert('123')}, 500);
 			    isShowToooltips=false;
 			}
