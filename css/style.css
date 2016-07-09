@@ -215,3 +215,71 @@ body {
         height: 18em;
     }
 }
+
+.sesstags {    
+    display: inline-block;
+    height: 18px;
+    line-height: 18px;
+    position: relative;
+    margin: 0 1px 1px 9px;
+    padding: 0 10px 0 12px;
+    background: #777;    
+    -webkit-border-bottom-right-radius: 3px;    
+    border-bottom-right-radius: 3px;
+    -webkit-border-top-right-radius: 3px;    
+    border-top-right-radius: 3px;
+    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    color: #fff;
+    font-size: 12px;
+    font-family: "Lucida Grande","Lucida Sans Unicode",Verdana,sans-serif;
+    text-decoration: none;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    font-weight: bold;
+}
+.sesstags:before {
+    content: "";
+    position: absolute;
+    top:0;
+    left: -9px;
+    width: 0;
+    height: 0;
+    border-color: transparent #3243A5 transparent transparent;
+    border-style: solid;
+    border-width: 9px 9px 9px 0;        
+}
+.sesstags:after {
+    content: "";
+    position: absolute;
+    top: 7px;
+    left: 1px;
+    float: left;
+    width: 4px;
+    height: 4px;
+    -webkit-border-radius: 50%;
+    border-radius: 50%;
+    background: #fff;
+    -webkit-box-shadow: -1px -1px 2px rgba(0,0,0,0.4);
+    box-shadow: -1px -1px 2px rgba(0,0,0,0.4);
+}
+
+.sesstags:hover {background:#777;}    
+.sesstags:hover:before {border-color:transparent #777 transparent transparent;}
+
+.sesstags.color1 {background: #f58220;}
+.sesstags.color1:before {border-color: transparent #f58220 transparent transparent;}
+
+.sesstags.color2 {background: #97c224;}
+.sesstags.color2:before {border-color: transparent #97c224 transparent transparent;}
+
+.sesstags.color3 {background: #de3f3e;}
+.sesstags.color3:before {border-color: transparent #de3f3e transparent transparent;}
+
+.sesstags.color4 {background: #ec008c;}
+.sesstags.color4:before {border-color: transparent #ec008c transparent transparent;}
+
+.sesstags.color5 {background: #00a6df;}
+.sesstags.color5:before {border-color: transparent #00a6df transparent transparent;}
+
+.sesstags:hover {background:#666 !important}  
+.sesstags:hover:before {border-color:transparent #666 transparent transparent !important}

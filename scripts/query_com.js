@@ -17,6 +17,7 @@ var CourtBox = React.createClass({
 			sysArray:[],//庭別清單
 			sys:'H',//庭別
 			isloading: false,//是否讀取中
+			isShowSessTime: false,//是否顯示開畢庭時間
 			uiDisabled: false,//UI是否啟用
 			radioGroup:null
 		};
@@ -38,6 +39,12 @@ var CourtBox = React.createClass({
 		this.setState({
 			filterCourtNm: filterCourtNm,
 			filterDpt: filterDpt
+		});
+	},
+	//顯示開庭時間
+	onShowSessTimeClick: function(checkbox){
+		this.setState({
+			isShowSessTime: checkbox.checked
 		});
 	},
 	//庭別篩選
@@ -270,6 +277,7 @@ var CourtBox = React.createClass({
 					//取消完讀取狀態，才開始擷取開庭狀態
 					this.setState({isloading: false}, function() {
   						this.loadSessionState(crtid, sys);//讀取開庭狀態
+  						setInterval(this.loadSessionState.bind(null,crtid,sys), this.props.pollInterval);//定時擷取資料
 					});
 				}else{
 					console.log("Courts is empty.");
@@ -321,6 +329,7 @@ var CourtBox = React.createClass({
 	},
 
 	loadSessionState: function(crtid, sys){
+		console.log(new Date() + " " + crtid +" " + sys + " get session.");
 		var isJobsDone = Array.apply(null, {length: this.state.courtNms.length}).map(function() { return false; });
 		//console.log(isJobsDone);
 		var courtData = this.state.data;
@@ -474,9 +483,9 @@ var CourtBox = React.createClass({
 		this.loadCourtFileData();
 	},
 	render: function(){
-		var result = <CourtList data={this.state.data.filter(this.condition)} onSelectRadio={this.handleRadioInput} />;
+		var result = <CourtList data={this.state.data.filter(this.condition)} onSelectRadio={this.handleRadioInput} isShowSessTime={this.state.isShowSessTime}/>;
 		if(this.state.mode==='Calendar'){
-			result = <Calerdar selected={moment().startOf("day")} data={this.state.data.filter(this.condition)} />;
+			result = <Calerdar selected={moment().startOf("day")} data={this.state.data.filter(this.condition)} isShowSessTime={this.state.isShowSessTime}/>;
 		}else if(this.state.mode==='Contact'){
 			result = <Contact />;
 		}
@@ -490,7 +499,9 @@ var CourtBox = React.createClass({
 				<FilterForm courtNms={this.state.courtNms} dpts={this.state.dpts} courtKds={this.state.courtKds}
 					filterCourtNm={this.state.filterCourtNm} filterDpt={this.state.filterDpt} filterCourtKd={this.state.filterCourtKd}
 					onFilter={this.handleFilterInput} onCourtKDClick={this.onCourtKDClick} uiDisabled={this.state.uiDisabled} 
-					sortData={this.sortData} filterText={this.filterText} filterAmTime={this.state.filterAmTime} onAmTimeClick={this.onAmTimeClick}/>
+					onShowSessTimeClick={this.onShowSessTimeClick} isShowSessTime={this.state.isShowSessTime} 
+					sortData={this.sortData} filterText={this.filterText} 
+					filterAmTime={this.state.filterAmTime} onAmTimeClick={this.onAmTimeClick}/>
 				{/*<LoadingComp isloading={this.state.isloading} />*/}
 				{result}
 				<span id="addeventatc-block" className={"btn btn-default" + (this.state.mode!='List' ? " hidden" : "")}>
@@ -620,6 +631,12 @@ var QueryForm = React.createClass({
 			});
 
 	  	});
+	  	$(function() {
+	        $( "#accordion" ).accordion({
+	            collapsible: true,
+	            active: false
+        });
+    });
 	},		
 	render: function() {
 		var uiClass = "";
@@ -652,10 +669,13 @@ var QueryForm = React.createClass({
 							<img src="image/loading.gif" className={uiClass}/>
 						</div>
 					</div>
-					<div className="form-group form-inline">
-                    	<input type="text" ref="date1" id="datepicker1" placeholder="開始日期" className="form-control"/>
-                    	<label>至</label>
-                    	<input type="text" ref="date2" id="datepicker2" placeholder="結束日期" className="form-control"/>
+					<div id="accordion" className="form-group form-inline">
+						<h4>庭期範圍</h4>
+						<div>
+	                    	<input type="text" ref="date1" id="datepicker1" placeholder="開始日期" className="form-control"/>
+	                    	<label>至</label>
+	                    	<input type="text" ref="date2" id="datepicker2" placeholder="結束日期" className="form-control"/>
+                    	</div>
                 	</div>
 				</form>
 			</div>
@@ -671,6 +691,9 @@ var FilterForm = React.createClass({
     		this.refs.courtNmInput.value,
     		this.refs.dptInput.value
     	);
+  	},
+  	handleShowSessTimehange: function(e){
+  		this.props.onShowSessTimeClick(e.target);
   	},
   	handleCourtKDChange: function(e){
   		this.props.onCourtKDClick(e.target);
@@ -751,7 +774,8 @@ var FilterForm = React.createClass({
 						<input ref="searchText" type="text" className="form-control" placeholder="請輸入年度、字別、案號、法庭或股別，以空白分隔，例如 105 訴 128" onChange={this.filterTextChange}  data-toggle="tooltip" data-placement="top" title="請輸入年度、字別、案號、法庭或股別，以空白分隔，例如 105 訴 128" {...opts}/>
 					</div>
 					<div className="form-group form-inline">
-						<button ref="sortBtn" type="button" className="btn btn-warning" onClick={this.props.sortData} {...opts}>找空庭嗎? (依法庭排序)</button> {amTimeNodes}
+						<button ref="sortBtn" type="button" className="btn btn-warning" onClick={this.props.sortData} {...opts}>找空庭嗎? (依法庭排序)</button> {amTimeNodes} 
+						<label><input type="checkbox" onChange={this.handleShowSessTimehange} checked={this.props.isShowSessTime} />顯示開閉庭時間</label>
 					</div>
 				</form>
 			</div>
@@ -825,7 +849,7 @@ var CourtList = React.createClass({
 	mapFunction: function(court){
 			var today = new Date();
 			return(
-				<Court key={court.num} court={court} isToday={court.realDate.isSame(today,"day")} onSelectRadio={this.props.onSelectRadio}></Court>
+				<Court key={court.num} court={court} isToday={court.realDate.isSame(today,"day")} onSelectRadio={this.props.onSelectRadio} isShowSessTime={this.props.isShowSessTime}></Court>
 			); 
 		},
 	render: function() {
@@ -900,7 +924,7 @@ var Court = React.createClass({
 				<td>{this.props.court.crmid}</td>
 				<td>{Number(this.props.court.crmno)}</td>
 				<td>{this.props.court.courtdate.insert(3," ")}</td>	
-				<td>{this.props.court.courtime.insert(2,":")}<Status isToday={this.props.isToday} court={this.props.court}/></td>
+				<td>{this.props.court.courtime.insert(2,":")}<Status isToday={this.props.isToday} court={this.props.court} isShowSessTime={this.props.isShowSessTime}/></td>
 				<td>{this.props.court.courtnm}</td>
 				<td>{this.props.court.dpt}</td>
 				<td>{this.props.court.courtkd}</td>
@@ -920,13 +944,27 @@ var Court = React.createClass({
 var Status = React.createClass({
 	render() {
 		var status = null;
+		var statusNew = "";
+		var statusStartTime = "";
+		var statusEndTime = "";
 		if(this.props.isToday){
 			if(typeof this.props.court.status != "undefined"){
 				status = <img src={"image/"+statusPic[this.props.court.status]} alt={this.props.court.status} title={this.props.court.status} clasName="" />;
 			}
 			if(typeof this.props.court.newadd != "undefined"){
-				status = <span>{status}<img src={"image/plus.png"} alt="臨時新增" title="臨時新增" clasName="" /></span>
+				statusNew = <img src={"image/plus.png"} alt="臨時新增" title="臨時新增" clasName="" />;
 			}
+			if(this.props.isShowSessTime){
+				if(typeof this.props.court.rstarttm != "undefined"){
+					statusStartTime = <span className="sesstags color1">{this.props.court.rstarttm.insert(2,":")}</span>;
+    				
+    			}
+    			if(typeof this.props.court.rstoptm != "undefined"){
+					statusStartTime = <span className="sesstags color2">{this.props.court.rstoptm.insert(2,":")}</span>;
+    				
+    			}
+			}
+			status = <span>{status}{statusNew} {statusStartTime}{statusEndTime}</span>;
 		}
 		return (
 			 status
@@ -972,10 +1010,10 @@ var Calerdar = React.createClass({
             //AMCut = 1300;//上下午時段切割點
         while (!done) {
         	//上午
-            weeks.push(<Week key={date.toString()+"_AM"} isAM={true} date={date.clone()} month={this.state.month} select={this.select} 
+            weeks.push(<Week key={date.toString()+"_AM"} isAM={true} isShowSessTime={this.props.isShowSessTime} date={date.clone()} month={this.state.month} select={this.select} 
             	selected={this.state.selected} data={this.props.data.filter(function(court) { return Number(court.courtime)<AMCut; })} />);
             //下午
-            weeks.push(<Week key={date.toString()+"_PM"} isAM={false} date={date.clone()} month={this.state.month} select={this.select} 
+            weeks.push(<Week key={date.toString()+"_PM"} isAM={false} isShowSessTime={this.props.isShowSessTime} date={date.clone()} month={this.state.month} select={this.select} 
             	selected={this.state.selected} data={this.props.data.filter(function(court) { return Number(court.courtime)>AMCut; })} />);            
             date.add(1, "w");
             done = count++ > 2 && monthIndex !== date.month();
@@ -1037,7 +1075,7 @@ var Week = React.createClass({
             };
             days.push(<td key={day.date.toString()} className={"day" + (day.isToday ? " today" : "") + (day.isCurrentMonth ? "" : " different-month") + (day.date.isSame(this.props.selected) ? " selected" : "")} 
             	onClick={this.props.select.bind(null, day)}>{(this.props.isAM ? day.number : "")}
-            	<Event key={day.date.toString()} data={this.props.data} day={day} isAM={this.props.isAM} />
+            	<Event key={day.date.toString()} data={this.props.data} day={day} isAM={this.props.isAM} isShowSessTime={this.props.isShowSessTime}/>
             	</td>);
             date = date.clone();
             date.add(1, "d");
@@ -1058,7 +1096,7 @@ var Event = React.createClass({
 		var eventNodes = events.map(function(court){
 							return <div key={court.num} className={"event"+ (!this.props.isAM ? " PM" : "")}>{court.courtime.insert(2,":") + " " + Number(court.courtid) + " " + 
 							court.dpt + "股 " + court.crmyy  + "" + court.crmid  + "" + Number(court.crmno) + " " + 
-							court.courtkd}<Status isToday={isToday} court={court}/></div>
+							court.courtkd}<Status isToday={isToday} court={court} isShowSessTime={this.props.isShowSessTime}/></div>
 						}.bind(this));
 		
 		var countLabel = ( (eventNodes.length>0)?"共"+eventNodes.length+"件":"");
@@ -1362,6 +1400,6 @@ http://clayliao.blogspot.tw/2011/03/yqlintroduxtion.html
 */
 //http://210.69.124.207/abbs/wkw/WHD_PDA_GET_COURTDATA.jsp?crtid=TYD&sys=H
 ReactDOM.render(
-	<CourtBox pollInterval={200000}/>,
+	<CourtBox pollInterval={180000}/>,
 	document.getElementById('content')
 );
