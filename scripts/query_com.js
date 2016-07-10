@@ -631,12 +631,14 @@ var QueryForm = React.createClass({
 			});
 
 	  	});
+	  	/*
 	  	$(function() {
 	        $( "#accordion" ).accordion({
 	            collapsible: true,
 	            active: false
-        });
-    });
+	        });
+	    });
+	    */
 	},		
 	render: function() {
 		var uiClass = "";
@@ -669,9 +671,9 @@ var QueryForm = React.createClass({
 							<img src="image/loading.gif" className={uiClass}/>
 						</div>
 					</div>
-					<div id="accordion" className="form-group form-inline">
-						<h4>庭期範圍</h4>
-						<div>
+					<div className="form-group form-inline">
+						<button type="button" data-toggle="collapse" data-target="#demo" className="btn btn-default" >庭期範圍</button>
+						<div id="demo" className="collapse content">
 	                    	<input type="text" ref="date1" id="datepicker1" placeholder="開始日期" className="form-control"/>
 	                    	<label>至</label>
 	                    	<input type="text" ref="date2" id="datepicker2" placeholder="結束日期" className="form-control"/>
@@ -955,11 +957,13 @@ var Status = React.createClass({
 				statusNew = <img src={"image/plus.png"} alt="臨時新增" title="臨時新增" clasName="" />;
 			}
 			if(this.props.isShowSessTime){
-				if(typeof this.props.court.rstarttm != "undefined"){
+				//console.log(this.props.court.rstarttm);
+				if((typeof this.props.court.rstarttm != "undefined") && this.props.court.rstarttm){
 					statusStartTime = <span className="sesstags color1">{this.props.court.rstarttm.insert(2,":")}</span>;
     				
     			}
-    			if(typeof this.props.court.rstoptm != "undefined"){
+    			//console.log(this.props.court.rstoptm);
+    			if((typeof this.props.court.rstoptm != "undefined") && this.props.court.rstoptm){
 					statusStartTime = <span className="sesstags color2">{this.props.court.rstoptm.insert(2,":")}</span>;
     				
     			}
