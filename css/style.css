@@ -285,3 +285,11 @@ body {
 
 .sesstags:hover {background:#666 !important}  
 .sesstags:hover:before {border-color:transparent #666 transparent transparent !important}
+
+#demo{
+    margin: 10px
+}
+
+.information{
+    margin: 5px
+}

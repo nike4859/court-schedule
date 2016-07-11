@@ -651,6 +651,10 @@ var QueryForm = React.createClass({
 		var sysArrayNodes = this.props.sysArray.map(function(sys){
 			return(<option key={sys.sys} value={sys.sys}>{sys.sysname}</option>);
 		});
+		var pos = this.props.crtids.map(function(tmp) {return tmp.crtid;}).indexOf(this.props.crtid);
+		if( this.props.crtids[pos]){
+			var info = <address className="information"><span className="glyphicon glyphicon-home"></span> {this.props.crtids[pos].address}<br/><abbr title="Phone"><span className="glyphicon glyphicon-earphone"></span></abbr> {this.props.crtids[pos].phone}</address>;
+		}
 		return (
 			<div className="content">
 				<h4></h4>
@@ -672,11 +676,12 @@ var QueryForm = React.createClass({
 						</div>
 					</div>
 					<div className="form-group form-inline">
-						<button type="button" data-toggle="collapse" data-target="#demo" className="btn btn-default" >庭期範圍</button>
-						<div id="demo" className="collapse content">
+						<button type="button" data-toggle="collapse" data-target="#demo" className="btn btn-default" >更多資訊</button>
+						<div id="demo" className="collapse">
 	                    	<input type="text" ref="date1" id="datepicker1" placeholder="開始日期" className="form-control"/>
 	                    	<label>至</label>
 	                    	<input type="text" ref="date2" id="datepicker2" placeholder="結束日期" className="form-control"/>
+	                    	{info}               	
                     	</div>
                 	</div>
 				</form>
