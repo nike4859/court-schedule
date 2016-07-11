@@ -964,7 +964,7 @@ var Status = React.createClass({
     			}
     			//console.log(this.props.court.rstoptm);
     			if((typeof this.props.court.rstoptm != "undefined") && this.props.court.rstoptm){
-					statusStartTime = <span className="sesstags color2">{this.props.court.rstoptm.insert(2,":")}</span>;
+					statusEndTime = <span className="sesstags color2">{this.props.court.rstoptm.insert(2,":")}</span>;
     				
     			}
 			}
