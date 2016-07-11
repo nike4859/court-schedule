@@ -1116,6 +1116,52 @@ var Event = React.createClass({
 var Contact  = React.createClass({
 	render: function() {
 		return (
+			<div>
+			
+			<div className="content">
+				<h4>操作說明</h4>
+				<ul>
+				  <li>選擇「法院」及「庭別」後，點選「查詢」下載該法院的資料。查詢後，便根據需求使用「篩選」條件，顯示需要的資料。</li>
+				  <li>表格內的<input type="radio" />點選後，點選右上角<img src="image/calendar-clock24.png" alt="" />按鈕，即可將案件資訊加入自己的行事曆。</li>
+				</ul>
+				<h4>開庭狀態說明</h4>
+				<table className="table table-striped">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>圖示</th>
+							<th>說明</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th scope="row">1</th>
+							<td><img src="image/status.png" alt="開完庭" title="開完庭" /></td>
+							<td>開完庭</td>
+						</tr> 
+						<tr>
+							<th scope="row">2</th>
+							<td><img src="image/status-busy.png" alt="開庭中" title="開庭中" /></td>
+							<td>開庭中</td>
+						</tr> 
+						<tr>
+							<th scope="row">3</th>
+							<td><img src="image/status-offline.png" alt="待開庭" title="待開庭" /></td>
+							<td>待開庭、下一庭、未開庭、未聽判</td>
+						</tr> 
+						<tr>
+							<th scope="row">4</th>
+							<td><span className="sesstags color1">10:15</span></td>
+							<td>於10:15開始開庭</td>
+						</tr>
+						<tr>
+							<th scope="row">5</th>
+							<td><span className="sesstags color2">10:15</span></td>
+							<td>於10:15開庭結束</td>
+						</tr> 	
+					</tbody>
+				</table>
+			</div>
 			<div className="license">
 				<a rel = "license" href = "http://creativecommons.org/licenses/by-nc/4.0/">
 				<img alt = "Creative Commons License" src = "https://i.creativecommons.org/l/by-nc/4.0/88x31.png" />
@@ -1126,6 +1172,7 @@ var Contact  = React.createClass({
 				Creative Commons Attribution-NonCommercial 4.0 International License</a>.<br />
 				Code is licensed under a <a rel="license" href="https://opensource.org/licenses/MIT">the MIT license</a>.<br />
 				Taiwan Taoyuan District Court
+			</div>
 			</div>
 		);
 	}
