@@ -221,7 +221,7 @@ body {
     height: 18px;
     line-height: 18px;
     position: relative;
-    margin: 0 1px 1px 9px;
+    /*margin: 0 1px 1px 9px;*/
     padding: 0 10px 0 12px;
     background: #777;    
     -webkit-border-bottom-right-radius: 3px;    
