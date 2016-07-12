@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>測試</title>
+    <script src=" https://code.jquery.com/jquery-1.12.4.min.js"></script>
+   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.3/jquery.xdomainrequest.min.js"></script>
+</head>
+<body>
+    <script>
+        $.ajax({
+            //crossDomain: true,
+            //dataType: 'jsonp xml',
+            data: 'data sent to the server on ' + (new Date()).toString(),
+            contentType: 'text/plain',
+            dataType: 'json',
+            type: 'POST',
+            cache: false,
+            url: "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_COURTDATA.jsp%3Fcrtid%3DTYD%26sys%3DH%26date1%3D1050712%26date2%3D1050726%26timstamp%3D1468338178957'&format=json&callback=",
+            success: function (result) {
+                alert('成功');
+                alert(result.query.results.DATA.rowid[0].courtdate);
+                objData = result;
+            },
+            error: function(xhr, status, err){
+                alert(err.toString());
+            }
+        });
+
+        // POST
+$.ajax({
+  url: 'http://frozen-woodland-5503.herokuapp.com/cors.json',
+  data: 'this is data being posted to the server',
+  contentType: 'text/plain',
+  type: 'POST',
+  dataType: 'json',
+              error: function(xhr, status, err){
+                alert(err.toString());
+            }
+}).done(function(data) {
+    alert(data.name.last);
+  console.log(data.name.last);
+});
+    </script>
+</body>
+</html>
