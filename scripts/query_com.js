@@ -949,7 +949,7 @@ var Court = React.createClass({
 
 //顯示開庭進度圖示
 var Status = React.createClass({
-	render() {
+	render: function() {
 		var status = null;
 		var statusNew = "";
 		var statusStartTime = "";
