@@ -101,17 +101,16 @@ var CourtBox = React.createClass({
 		this.refs.start.textContent=ROCtoAD(row.courtdate) + " " + row.courtime.insert(2,":");//設定行事曆開始時間 24H
 		this.refs.end.textContent=ROCtoAD(row.courtdate) + "";//不給結束的時間好像會自動加一個小時作為結束
 		//設定內容
-		// var url = "http://jirs.judicial.gov.tw/FJUD/FJUDQRY02_1.aspx?"
-		// +"cw=1&v_court="+this.state.crtid+"&v_sys="+this.state.sys
-		// +"&jud_year="+row.crmyy+"&jud_case="+row.crmid+"&jud_no="+Number(row.crmno)
-		// +"&jud_title=&keyword=&sdate=&edate=&searchkw=";
+		var url = "http://jirs.judicial.gov.tw/FJUD/FJUDQRY02_1.aspx?"
+		+"cw=1&v_court="+this.state.crtid+"&v_sys="+this.state.sys
+		+"&jud_year="+row.crmyy+"&jud_case="+row.crmid+"&jud_no="+Number(row.crmno)
+		+"&jud_title=&keyword=&sdate=&edate=&searchkw=";
 		this.refs.description.innerHTML = caseName + "<br>" + 
 										"法院:" + this.state.crtid + " " + crtName + "<br>" + 
 										"案件類別:" + sysName + "<br>" + 
 										"庭類:" + row.courtkd + "<br>" + 
 										"股別:" + row.dpt + "<br>" + 
-										"";
-										// "<a href=\""+url+"\" target=\"_blank\">判決連結</a>";//不支援link
+										"判決連結:<br>"+ url;//不支援link
 		this.refs.location.textContent=crtName + " " + sysName + " " + row.courtnm;//設定開庭地點
 		this.setState({
 			radioGroup:e.target
