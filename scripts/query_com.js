@@ -101,8 +101,9 @@ var CourtBox = React.createClass({
 		this.refs.start.textContent=ROCtoAD(row.courtdate) + " " + row.courtime.insert(2,":");//設定行事曆開始時間 24H
 		this.refs.end.textContent=ROCtoAD(row.courtdate) + "";//不給結束的時間好像會自動加一個小時作為結束
 		//設定內容
+		var urlSys = (this.state.sys==="H")?"M":this.state.sys;//刑庭代碼轉換
 		var url = "http://jirs.judicial.gov.tw/FJUD/FJUDQRY02_1.aspx?"
-		+"cw=1&v_court="+this.state.crtid+"&v_sys="+this.state.sys
+		+"cw=1&v_court="+this.state.crtid+"&v_sys="+urlSys
 		+"&jud_year="+row.crmyy+"&jud_case="+row.crmid+"&jud_no="+Number(row.crmno)
 		+"&jud_title=&keyword=&sdate=&edate=&searchkw=";
 		this.refs.description.innerHTML = caseName + "<br>" + 
