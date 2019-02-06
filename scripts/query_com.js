@@ -168,10 +168,13 @@ var CourtBox = React.createClass({
 			url: url,
     		crossDomain: true,
     		//dataType: 'jsonp xml',
-    		dataType: 'json',
+    		dataType: 'xml',
 			cache: false,
 			success: function(data){
-				var array = data.query.results.DATA.rowid;
+				//console.info(data);//xml
+				//console.info(xmlToJson(data));//to json
+				var array = xmlToJson(data).DATA.rowid;
+				//var array = data.query.results.DATA.rowid;
 				//處理回傳的資料
 				if(array){
 					//有可能只回傳一筆資料，需轉換成array避免後續無法使用array方法
@@ -352,23 +355,25 @@ var CourtBox = React.createClass({
 	    		//dataType: 'json',
 				cache: false,
 				success: function(data){
-					//console.log(data);
-					var count = data.query.count;
+					console.log(data);
+					var count = data.length;// cors.io回傳 array
 					//console.log(data);
 					if(count>0){//當有回傳資料時
-						if(typeof data.query.results.json.json == "undefined"){//當資料只回傳一筆時
-							var array = data.query.results.json;
-							//轉成陣列
-							if(!(array instanceof Array)){
-								console.log("Data not array.");
-								var tmp=[];
-								tmp.push(array);
-								array = tmp;
-								//console.log(array instanceof Array);
-							}
-						}else{//當資料回傳多筆時
-							var array = data.query.results.json.json;
-						}
+						// YQL會轉換資料，cors.io直接回傳json資料
+						// if(typeof data.query.results.json.json == "undefined"){//當資料只回傳一筆時
+						// 	var array = data.query.results.json;
+						// 	//轉成陣列
+						// 	if(!(array instanceof Array)){
+						// 		console.log("Data not array.");
+						// 		var tmp=[];
+						// 		tmp.push(array);
+						// 		array = tmp;
+						// 		//console.log(array instanceof Array);
+						// 	}
+						// }else{//當資料回傳多筆時
+						// 	var array = data.query.results.json.json;
+						// }
+						var array = data
 						//組裝資料
 						//var courtData = this.state.data;
 						for(var i in array){//庭期進度
@@ -1218,6 +1223,9 @@ crtid:"TYD"
 dpt:"騰"
 num:"0"
 sys:"H"
+
+http://210.69.124.207/abbs/wkw/WHD_PDA_GET_COURTDATA.jsp?crtid=TYD&sys=H&date1=1080204&date2=1080214
+
 */
 function getCourtUrl(crtid, sys, dateBegin, dateEnd){
 	if(!dateBegin || !dateEnd){
@@ -1227,7 +1235,9 @@ function getCourtUrl(crtid, sys, dateBegin, dateEnd){
 	if(!crtid || !sys){//empty
 		return;
 	}
-	return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_COURTDATA.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26date1%3D"+dateBegin+"%26date2%3D"+dateEnd+"%26timstamp%3D"+ (new Date()).getTime() +"'&format=json&callback=";
+	return "https://cors.io/?http://210.69.124.207/abbs/wkw/WHD_PDA_GET_COURTDATA.jsp?crtid="+crtid+"&sys="+sys+"&date1="+dateBegin+"&date2="+dateEnd;
+	//return "http://210.69.124.207/abbs/wkw/WHD_PDA_GET_COURTDATA.jsp?crtid="+crtid+"&sys="+sys+"&date1="+dateBegin+"&date2="+dateEnd;
+	//return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_COURTDATA.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26date1%3D"+dateBegin+"%26date2%3D"+dateEnd+"%26timstamp%3D"+ (new Date()).getTime() +"'&format=json&callback=";
 };
 
 //取得庭期狀態查詢的URL
@@ -1259,8 +1269,9 @@ function getSessionStateUrl(crtid, sys, courtid){
 	if(!crtid || !sys || !courtid){//empty
 		return;
 	}
+	return "https://cors.io/?http://210.69.124.207/abbs/wkw/WHD_PDA_GET_CTSTATE.jsp?crtid="+crtid+"&sys="+sys+"&ducd="+courtid;
 	//return "http://210.69.124.207/abbs/wkw/WHD_PDA_GET_CTSTATE.jsp?crtid="+crtid+"&sys="+sys+"&ducd="+courtid;
-	return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20json%20where%20url%3D%22http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_CTSTATE.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26ducd%3D"+courtid+"%26timstamp%3D"+ (new Date()).getTime() +"%22&format=json&callback=";
+	//return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20json%20where%20url%3D%22http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_CTSTATE.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26ducd%3D"+courtid+"%26timstamp%3D"+ (new Date()).getTime() +"%22&format=json&callback=";
 	//return "https://jsonp.afeld.me/?url=http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_CTSTATE.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26ducd%3D"+courtid;
 };
 
@@ -1471,3 +1482,50 @@ ReactDOM.render(
 	<CourtBox pollInterval={180000}/>,
 	document.getElementById('content')
 );
+
+
+// Changes XML to JSON
+// Modified version from here: http://davidwalsh.name/convert-xml-json
+function xmlToJson(xml) {
+
+	// Create the return object
+	var obj = {};
+
+	if (xml.nodeType == 1) { // element
+		// do attributes
+		// attributes as a node
+		if (xml.attributes.length > 0) {
+		//obj["@attributes"] = {};
+			for (var j = 0; j < xml.attributes.length; j++) {
+				var attribute = xml.attributes.item(j);
+				//obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
+				obj[attribute.nodeName] = attribute.nodeValue;
+			}
+		}
+	} else if (xml.nodeType == 3) { // text
+		obj = xml.nodeValue;
+	}
+
+	// do children
+	// If just one text node inside
+	if (xml.hasChildNodes() && xml.childNodes.length === 1 && xml.childNodes[0].nodeType === 3) {
+		obj = xml.childNodes[0].nodeValue;
+	}
+	else if (xml.hasChildNodes()) {
+		for(var i = 0; i < xml.childNodes.length; i++) {
+			var item = xml.childNodes.item(i);
+			var nodeName = item.nodeName;
+			if (typeof(obj[nodeName]) == "undefined") {
+				obj[nodeName] = xmlToJson(item);
+			} else {
+				if (typeof(obj[nodeName].push) == "undefined") {
+					var old = obj[nodeName];
+					obj[nodeName] = [];
+					obj[nodeName].push(old);
+				}
+				obj[nodeName].push(xmlToJson(item));
+			}
+		}
+	}
+	return obj;
+}
