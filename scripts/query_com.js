@@ -1209,6 +1209,14 @@ var LoadingComp = React.createClass({
 	}
 });
 
+// 採用jQuery的ajaxPrefilter來修改cors proxy
+// https://github.com/Rob--W/cors-anywhere
+$.ajaxPrefilter(function(options) {
+	if (options.crossDomain && $.support.cors) {
+		options.url = 'https://cors-anywhere.herokuapp.com/' + options.url;
+	}
+});
+
 //取得法院查詢的YQL URL
 /*
 courtdate:"1050602"
@@ -1235,7 +1243,8 @@ function getCourtUrl(crtid, sys, dateBegin, dateEnd){
 	if(!crtid || !sys){//empty
 		return;
 	}
-	return "https://cors.io/?http://210.69.124.207/abbs/wkw/WHD_PDA_GET_COURTDATA.jsp?crtid="+crtid+"&sys="+sys+"&date1="+dateBegin+"&date2="+dateEnd;
+	return "http://210.69.124.207/abbs/wkw/WHD_PDA_GET_COURTDATA.jsp?crtid="+crtid+"&sys="+sys+"&date1="+dateBegin+"&date2="+dateEnd;
+	//return "https://cors.io/?http://210.69.124.207/abbs/wkw/WHD_PDA_GET_COURTDATA.jsp?crtid="+crtid+"&sys="+sys+"&date1="+dateBegin+"&date2="+dateEnd;
 	//return "http://210.69.124.207/abbs/wkw/WHD_PDA_GET_COURTDATA.jsp?crtid="+crtid+"&sys="+sys+"&date1="+dateBegin+"&date2="+dateEnd;
 	//return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_COURTDATA.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26date1%3D"+dateBegin+"%26date2%3D"+dateEnd+"%26timstamp%3D"+ (new Date()).getTime() +"'&format=json&callback=";
 };
@@ -1269,7 +1278,8 @@ function getSessionStateUrl(crtid, sys, courtid){
 	if(!crtid || !sys || !courtid){//empty
 		return;
 	}
-	return "https://cors.io/?http://210.69.124.207/abbs/wkw/WHD_PDA_GET_CTSTATE.jsp?crtid="+crtid+"&sys="+sys+"&ducd="+courtid;
+	return "http://210.69.124.207/abbs/wkw/WHD_PDA_GET_CTSTATE.jsp?crtid="+crtid+"&sys="+sys+"&ducd="+courtid;
+	//return "https://cors.io/?http://210.69.124.207/abbs/wkw/WHD_PDA_GET_CTSTATE.jsp?crtid="+crtid+"&sys="+sys+"&ducd="+courtid;
 	//return "http://210.69.124.207/abbs/wkw/WHD_PDA_GET_CTSTATE.jsp?crtid="+crtid+"&sys="+sys+"&ducd="+courtid;
 	//return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20json%20where%20url%3D%22http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_CTSTATE.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26ducd%3D"+courtid+"%26timstamp%3D"+ (new Date()).getTime() +"%22&format=json&callback=";
 	//return "https://jsonp.afeld.me/?url=http%3A%2F%2F210.69.124.207%2Fabbs%2Fwkw%2FWHD_PDA_GET_CTSTATE.jsp%3Fcrtid%3D"+crtid+"%26sys%3D"+sys+"%26ducd%3D"+courtid;
