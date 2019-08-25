@@ -1214,7 +1214,7 @@ var LoadingComp = React.createClass({
 $.ajaxPrefilter(function(options) {
 	if (options.crossDomain && $.support.cors) {
 		//options.url = 'http://localhost:8080/' + options.url;
-		options.url = 'http://corsto.azurewebsites.net/' + options.url.replace(/^(https?|ftp):\/\//,'');
+		options.url = window.location.protocol + '://corsto.azurewebsites.net/' + options.url.replace(/^(https?|ftp):\/\//,'');
 		//options.url = 'https://cors-anywhere.herokuapp.com/' + options.url;
 	}
 });
