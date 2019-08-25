@@ -1213,7 +1213,9 @@ var LoadingComp = React.createClass({
 // https://github.com/Rob--W/cors-anywhere
 $.ajaxPrefilter(function(options) {
 	if (options.crossDomain && $.support.cors) {
-		options.url = 'https://cors-anywhere.herokuapp.com/' + options.url;
+		//options.url = 'http://localhost:8080/' + options.url;
+		options.url = 'http://corsto.azurewebsites.net/' + options.url.replace(/^(https?|ftp):\/\//,'');
+		//options.url = 'https://cors-anywhere.herokuapp.com/' + options.url;
 	}
 });
 
