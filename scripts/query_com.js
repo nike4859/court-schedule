@@ -165,6 +165,7 @@ var CourtBox = React.createClass({
 		console.debug(url);
 		//抓取法庭資料
 		$.ajax({
+		method: 'post',
 			url: url,
     		crossDomain: true,
     		//dataType: 'jsonp xml',
@@ -349,6 +350,7 @@ var CourtBox = React.createClass({
 			//var url = "https://graph.facebook.com/10150232496792613";
 			console.log(url);
 			$.ajax({
+			method: 'post',
 				url: url,
 	    		crossDomain: true,
 	    		dataType: 'json',
